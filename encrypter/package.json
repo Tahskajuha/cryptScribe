@@ -1,0 +1,16 @@
+{
+  "name": "encrypter",
+  "version": "0.1.0",
+  "description": "Encrypter for the web journal api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Tahskajuha",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "libsodium-wrappers": "^0.7.15"
+  }
+}
