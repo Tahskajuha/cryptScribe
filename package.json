@@ -1,0 +1,21 @@
+{
+  "name": "WJ",
+  "version": "0.1.0",
+  "description": "Web Journal App",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Tahskajuha",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "libsodium-wrappers": "^0.7.15",
+    "pg": "^8.16.2"
+  }
+}
