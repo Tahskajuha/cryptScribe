@@ -1,2 +1,2 @@
 eslint.config.js
-vite.config.js
+node_modules/*
