@@ -84,4 +84,33 @@ async function tth16(text) {
   return [h, h64];
 }
 
-export default { wait, animations, domReady, keygen, encrypt, decrypt, tth16 };
+async function mac(message, key) {
+  await _sodium.ready;
+  let sodium = _sodium;
+  return sodium.crypto_auth(message, key);
+}
+
+async function fromB64(text) {
+  await _sodium.ready;
+  let sodium = _sodium;
+  return sodium.from_base64(text);
+}
+
+async function toB64(uintArrayy) {
+  await _sodium.ready;
+  let sodium = _sodium;
+  return sodium.to_base64(uintArrayy);
+}
+
+export default {
+  wait,
+  animations,
+  domReady,
+  keygen,
+  encrypt,
+  decrypt,
+  tth16,
+  mac,
+  fromB64,
+  toB64,
+};
