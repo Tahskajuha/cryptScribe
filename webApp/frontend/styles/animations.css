@@ -1,0 +1,85 @@
+body {
+  background-color: black;
+}
+.fade {
+  transition: opacity 0.4s ease 1s;
+}
+.fadeSlow {
+  transition: opacity 2s ease 1s;
+}
+.hidden {
+  opacity: 0;
+  pointer-events: none !important;
+}
+#whiteScreen {
+  color-scheme: light;
+  background-color: white !important;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  inset: 0;
+  object-fit: cover;
+}
+#background {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
+}
+#leave {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+button {
+  position: relative;
+  background: #6a0dad;
+  color: white;
+  font-family: "Cantarell", sans-serif;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 0px;
+  padding: 5px;
+}
+button span {
+  position: relative;
+  z-index: 1;
+}
+button::before {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  content: "";
+  background: #000;
+  width: 120%;
+  left: -10%;
+  transform: skew(30deg);
+  transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
+  z-index: 0;
+}
+button:hover::before {
+  transform: translate3d(100%, 0, 0);
+}
+button:active {
+  transform: scale(0.95);
+}
+button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+button:disabled:hover::before {
+  transform: none;
+}
