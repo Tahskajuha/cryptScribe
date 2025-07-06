@@ -7,10 +7,10 @@ CREATE TABLE journal.cred_auth (
 );
 CREATE TABLE journal.nonces (
 	nonce TEXT PRIMARY KEY,
-	apikeyh TEXT NOT NULL,
+	uid TEXT NOT NULL,
 	intent VARCHAR(255) NOT NULL,
 	expires_at TIMESTAMP NOT NULL,
-	FOREIGN KEY (apikeyh) REFERENCES journal.cred_auth(apikeyh)
+	FOREIGN KEY (uid) REFERENCES journal.cred_auth(uid)
 );
 CREATE TABLE journal.api_auth (
 	apikeyh TEXT PRIMARY KEY,
@@ -27,7 +27,8 @@ CREATE TABLE journal.entries (
 );
 CREATE TABLE journal.placeholders (
 	index SERIAL PRIMARY KEY,
-	placeholderkey TEXT NOT NULL UNIQUE
+	placeholderkey TEXT NOT NULL UNIQUE,
+	ready BOOLEAN NOT NULL
 );
 GRANT USAGE, CREATE ON SCHEMA journal TO webapp;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA journal TO webapp;
