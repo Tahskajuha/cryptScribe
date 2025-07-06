@@ -43,7 +43,7 @@ async function runTransaction(callbackFunction) {
     return result;
   } catch (err) {
     await client.query("ROLLBACK");
-    throw error;
+    throw err;
   } finally {
     client.release();
   }
@@ -118,9 +118,10 @@ async function nonceCleaner() {
 }
 
 async function getPlaceholder(index) {
-  await runTransaction(async (client) => {
+  const placeholder = await runTransaction(async (client) => {
     const pres = await client.query(
-      `			(
+      `		WITH combined AS(
+			(
 				SELECT * FROM placeholders
 				WHERE index >= $1
 				AND ready = true
@@ -135,8 +136,10 @@ async function getPlaceholder(index) {
 				ORDER BY index ASC
 				LIMIT 1
 			)
-			LIMIT 1
-			FOR UPDATE SKIP LOCKED
+		)
+		SELECT * FROM combined	
+		LIMIT 1
+		FOR UPDATE SKIP LOCKED
 	`,
       [index],
     );
@@ -148,8 +151,10 @@ async function getPlaceholder(index) {
       "UPDATE placeholders SET ready = false WHERE index = $1",
       [picked.index],
     );
+    console.log(picked.placeholderkey);
     return picked.placeholderkey;
   });
+  return placeholder;
 }
 
 //=====================================================<Routes>=======================================================
@@ -168,6 +173,7 @@ app.post("/void/regilo", async (req, res) => {
       let randomVals = await Promise.all([genRandom(), genRandom()]);
       let index = Math.floor(Math.random() * 30) + 1;
       let placeholder = await getPlaceholder(index);
+      console.log(placeholder);
       const now = new Date();
       const expiry = new Date(now.getTime() + 30000);
       await Promise.all([
@@ -177,7 +183,7 @@ app.post("/void/regilo", async (req, res) => {
             [uid, randomVals[0][1], placeholder],
           );
         }),
-        runTransaction(async () => {
+        runTransaction(async (client) => {
           await client.query(
             "INSERT INTO nonces (nonce, uid, intent, expires_at) VALUES ($1, $2, $3, $4)",
             [randomVals[1][1], uid, intent, expiry],
@@ -192,7 +198,7 @@ app.post("/void/regilo", async (req, res) => {
       const nonce = await genRandom();
       const now = new Date();
       const expiry = new Date(now.getTime() + 30000);
-      await runTransaction(async () => {
+      await runTransaction(async (client) => {
         await client.query(
           "INSERT INTO nonces (nonce, uid, intent, expires_at) VALUES ($1, $2, $3, $4)",
           [nonce[1], uid, intent, expiry],
@@ -220,7 +226,7 @@ app.post("/void/gin", async (req, res) => {
   try {
     const checkReq = await Promise.all([
       runTransaction(async (client) => {
-        await client.query(
+        const checkReqQres = await client.query(
           `DELETE FROM nonces
 	USING cred_auth
 	WHERE nonces.uid = cred_auth.uid
@@ -230,6 +236,7 @@ app.post("/void/gin", async (req, res) => {
 	RETURNING nonces.*, cred_auth.*`,
           [nonce, now],
         );
+        return checkReqQres;
       }),
       _sodium.ready,
     ]);
@@ -268,7 +275,7 @@ app.post("/void/ster", async (req, res) => {
 
   try {
     const checkReq = await runTransaction(async (client) => {
-      await client.query(
+      const checkReqQres = await client.query(
         `DELETE FROM nonces
 	USING cred_auth
 	WHERE nonces.uid = cred_auth.uid
@@ -278,6 +285,7 @@ app.post("/void/ster", async (req, res) => {
 	RETURNING nonces.*, cred_auth.*`,
         [nonce, now],
       );
+      return checkReqQres;
     });
 
     if (checkReq.rowCount === 1) {
@@ -323,7 +331,7 @@ app.listen(webPort, async () => {
     placeholder.push(newph[1]);
   }
   await db.query(
-    "INSERT INTO placeholders (placeholderkey) SELECT value, true FROM UNNEST($1::text[]) AS value",
+    "INSERT INTO placeholders (placeholderkey, ready) SELECT value, true FROM UNNEST($1::text[]) AS value",
     [placeholder],
   );
   await nonceCleaner();
