@@ -5,6 +5,8 @@ import { expressCspHeader, INLINE, NONE, SELF } from "express-csp-header";
 import pg from "pg";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
+import "dotenv/config";
 
 const db = new pg.Pool({
   user: "webapp",
@@ -158,18 +160,14 @@ async function getPlaceholder(index) {
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", (req, res) => {
-  res.send("Hello World!");
-});
+app.get("/void", (req, res) => {});
 
 app.post("/void/regilo", async (req, res) => {
-  //query req.email and send res = {salt, nonce}
   const uid = req.body.uid;
   const intent = req.body.intent;
   try {
     let qres = await db.query("SELECT * FROM cred_auth WHERE uid = $1", [uid]);
     if (qres.rowCount === 0 && intent === "register") {
-      //generate salt, nonce and create entry in nonce table and cred_auth table
       let randomVals = await Promise.all([genRandom(), genRandom()]);
       let index = Math.floor(Math.random() * 30) + 1;
       let placeholder = await getPlaceholder(index);
@@ -192,7 +190,6 @@ app.post("/void/regilo", async (req, res) => {
       ]);
       res.json({ found: 0, salt: randomVals[0][1], nonce: randomVals[1][1] });
     } else if (qres.rowCount === 1 && intent === "login") {
-      //get salt from result, generate nonce and send both
       await _sodium.ready;
       const sodium = _sodium;
       const nonce = await genRandom();
@@ -249,7 +246,20 @@ app.post("/void/gin", async (req, res) => {
       const apikeyhUint = sodium.from_base64(result.apikeyh);
       const valid = sodium.crypto_auth_verify(hmacUint, apikeyhUint, nonceUint);
       if (valid === true) {
-        return res.json({ verified: 1 });
+        const keyMap = await db.query(
+          "Select * FROM api_auth WHERE apikeyh = $1",
+          [result.apikeyh],
+        );
+        const token = jwt.sign(
+          {
+            sub: keyMap.rows[0].enckeyh,
+            iat: Date.now(),
+            exp: Date.now() + 600000,
+          },
+          process.env.READ,
+          { algorithm: HS256 },
+        );
+        return res.json({ verified: 1, token: token });
       } else {
         return res.json({ verified: 0 });
       }
@@ -308,7 +318,16 @@ app.post("/void/ster", async (req, res) => {
           [apikeyh, enckeyh],
         );
       });
-      return res.json({ verified: 1 });
+      const token = jwt.sign(
+        {
+          sub: enckeyh,
+          iat: Date.now(),
+          exp: Date.now() + 600000,
+        },
+        process.env.READ,
+        { algorithm: HS256 },
+      );
+      return res.json({ verified: 1, token: token });
     } else if (checkReq.rowCount === 0) {
       return res.json({ verified: 0 });
     } else {
@@ -323,6 +342,8 @@ app.post("/void/ster", async (req, res) => {
   }
 });
 
+app.post("/void/write", async (req, res) => {});
+
 //================================================<Server Start and End>==============================================
 app.listen(webPort, async () => {
   let placeholder = [];
@@ -334,6 +355,8 @@ app.listen(webPort, async () => {
     "INSERT INTO placeholders (placeholderkey, ready) SELECT value, true FROM UNNEST($1::text[]) AS value",
     [placeholder],
   );
+  process.env.READ = (await genRandom())[1];
+  process.env.WRITE = (await genRandom())[1];
   await nonceCleaner();
   console.log(`Active on port ${webPort}`);
 });

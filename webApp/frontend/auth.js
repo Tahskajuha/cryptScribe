@@ -18,6 +18,14 @@ $("#login").on("submit", async (e) => {
         uid: uid[1],
         intent: "login",
       }),
+      error: function (xhr, textStatus, errorThrown) {
+        if (xhr.status === 500) {
+          alert(
+            "Sorry about that, looks like the server is facing some issues. Please try again later!",
+          );
+          window.location.reload();
+        }
+      },
     }),
     argon2.hash({
       pass: data.get("password"),
@@ -51,8 +59,18 @@ $("#login").on("submit", async (e) => {
         hmac: hmacB64,
         nonce: secretTalks[0].nonce,
       }),
+      error: function (xhr, textStatus, errorThrown) {
+        if (xhr.status === 500) {
+          alert(
+            "Sorry about that, looks like the server is facing some issues. Please try again later!",
+          );
+          window.location.reload();
+        }
+      },
     });
     if (loginResponse.verified === 1) {
+      const token = loginResponse.token;
+      sessionStorage.setItem("token", token);
       await utils.animations.pageLeave();
     } else if (loginResponse.verified === 0) {
       await utils.wait(1000);
@@ -67,8 +85,6 @@ $("#login").on("submit", async (e) => {
     $("#content").removeClass("hidden");
     $("#pwdReset").removeClass("hidden");
     $("#loginErr").removeClass("hidden");
-  } else {
-    alert("Internal Server Error");
   }
 });
 
@@ -111,6 +127,14 @@ $("#register").on("submit", async (e) => {
         uid: uid[1],
         intent: "register",
       }),
+      error: function (xhr, textStatus, errorThrown) {
+        if (xhr.status === 500) {
+          alert(
+            "Sorry about that, looks like the server is facing some issues. Please try again later!",
+          );
+          window.location.reload();
+        }
+      },
     }),
     argon2.hash({
       pass: data.get("password"),
@@ -142,8 +166,8 @@ $("#register").on("submit", async (e) => {
     $("#key").val(hashes[1][0]);
     $("#copy").on("click", () => {
       navigator.clipboard.writeText(hashes[1][0]);
-      $("#keyConfirmButton").prop("disabled", false);
     });
+    $("#secret").removeClass("hidden");
     const hashB64 = await utils.toB64(hashes[0].hash);
     const regResponse = await $.ajax({
       url: "/void/ster",
@@ -154,20 +178,32 @@ $("#register").on("submit", async (e) => {
         enckeyh: hashes[1][1],
         nonce: secretTalks[0].nonce,
       }),
+      error: function (xhr, textStatus, errorThrown) {
+        if (xhr.status === 500) {
+          alert(
+            "Sorry about that, looks like the server is facing some issues. Please try again later!",
+          );
+          window.location.reload();
+        }
+      },
     });
     if (regResponse.verified === 1) {
-      await utils.animations.pageLeave();
+      const token = regResponse.token;
+      sessionStorage.setItem("token", token);
+      $("#keyConfirmButton").prop("disabled", false);
+      $("#keyConfirmButton").on("click", async () => {
+        await utils.animations.pageLeave();
+      });
     } else if (regResponse.verified === 0) {
-      alert("Request Timed Out!");
-    } else {
-      alert("Internal Server Error!");
+      await utils.wait(2000);
+      $("#content").removeClass("hidden");
+      $("#pwdReset").removeClass("hidden");
+      $("#registerErr").removeClass("hidden");
     }
   } else if (secretTalks[0].found === 1) {
     await utils.wait(2000);
     $("#content").removeClass("hidden");
     $("#pwdReset").removeClass("hidden");
     $("#registerErr").removeClass("hidden");
-  } else {
-    alert("Internal Server Error!");
   }
 });

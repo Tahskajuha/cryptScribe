@@ -20,7 +20,9 @@
     <div id="content" class="hidden fade">
       <div class="authTags">
         <h2>Login</h2>
-        <h4 id="loginErr" class="hidden errFeedback">[Invalid Credentials]</h4>
+        <h4 id="loginErr" class="hidden errFeedback">
+          [Invalid Credentials]<br />[or Request Timed Out...]
+        </h4>
       </div>
       <form id="login">
         <label> Email ID: </label>
@@ -44,7 +46,7 @@
       <div class="authTags">
         <h2>Register</h2>
         <h4 id="registerErr" class="hidden errFeedback">
-          [Username Already Exists!]
+          [Username Already Exists!]<br />[or Request Timed Out...]
         </h4>
       </div>
       <form id="register" action="/register" method="POST">
@@ -268,8 +270,10 @@
           Lose it, and you might as well start working in the quantum computing
           field to get your data back. Share it wisely -- while this is not tied
           to authentication whatsoever, you are still handing the keys to your
-          locker. <b>Seriously. You have been warned!</b></span
-        >
+          locker. <b>Seriously. You have been warned!</b> <br /><br />
+          PS: The confirm button will be enabled as soon as your registration on
+          the server side is completed.
+        </span>
       </div>
       <div id="keyCopy">
         <input type="text" disabled id="key" />
