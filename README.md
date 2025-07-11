@@ -6,17 +6,17 @@
 
 ## **Key Features**
 
-    - **Zero-Plaintext Backend**
-        The backend is a stateless API server that NEVER recieves or stores plaintext data. Encryption/decryption is handled solely on the client-side.
+- **Zero-Plaintext Backend**
+  The backend is a stateless API server that NEVER recieves or stores plaintext data. Encryption/decryption is handled solely on the client-side.
 
-    - **Flexible Deployment**
-        While currently being designed for local-first deployment, the goal is to make sure that only minimal changes are required to deploy the backend over .onion.
+- **Flexible Deployment**
+  While currently being designed for local-first deployment, the goal is to make sure that only minimal changes are required to deploy the backend over .onion.
 
-    - **Animations (because why not?)**
-        Choose to enjoy cool animations with the frontend or cut straight to the meat with the CLI.
+- **Animations (because why not?)**
+  Choose to enjoy cool animations with the frontend or cut straight to the meat with the CLI.
 
-    - **Database Normalization**
-        The backend uses a relational database normalized up to BCNF (Boyce-Codd Normal Form) while still making sure that queries are optimized to require at most one join, thus keeping access overhead minimal.
+- **Database Normalization**
+  The backend uses a relational database normalized up to BCNF (Boyce-Codd Normal Form) while still making sure that queries are optimized to require at most one join, thus keeping access overhead minimal.
 
 ---
 
