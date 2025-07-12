@@ -47,19 +47,19 @@
 
 ### **TO-DO**
 
-- [] Finish CLI auth flow.
-- [] Implement strict rate-limiting on all routes.
-- [] Build a minimal markdown editor using react with a sync button and a key-input.
-- [] Implement endpoints for read (GET via login/read token), write (POST with write token) and password reset.
-- [] CLI interface for reading/writing securely.
-- [] Prepare for .onion-compatible backend deployment (for both local and remote use).
-- [] Set up Vite build for Electron frontend.
-- [] Set up esbuild for CLI tool bundling.
-- [] Create a 'Usage' section in the README for both local and remote deployment instructions.
-- [] Add unified logging layer in the server.
-- [] UI for key regeneration (with warning + optional export)
-- [] Server-side endpoint for bulk-deletion of user-owned entries (triggered at key regeneration or manually).
-- [] Database update on key regen or password reset.
+- [ ] Finish CLI auth flow.
+- [ ] Implement strict rate-limiting on all routes.
+- [ ] Build a minimal markdown editor using react with a sync button and a key-input.
+- [ ] Implement endpoints for read (GET via login/read token), write (POST with write token) and password reset.
+- [ ] CLI interface for reading/writing securely.
+- [ ] Prepare for .onion-compatible backend deployment (for both local and remote use).
+- [ ] Set up Vite build for Electron frontend.
+- [ ] Set up esbuild for CLI tool bundling.
+- [ ] Create a 'Usage' section in the README for both local and remote deployment instructions.
+- [ ] Add unified logging layer in the server.
+- [ ] UI for key regeneration (with warning + optional export)
+- [ ] Server-side endpoint for bulk-deletion of user-owned entries (triggered at key regeneration or manually).
+- [ ] Database update on key regen or password reset.
 
 ---
 
