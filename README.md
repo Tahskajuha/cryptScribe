@@ -80,8 +80,8 @@ This app is built around a zero-plaintext, zero-trust model. The backend is stat
   Additionally, a nonce cleaner prunes stale nonces while redundant checks at response endpoints make absolutely certain that no expired nonce gets through.
 
 - **Login via HMAC:**
-  The client proves knowledge of APIKEYH via:<br />
-  `HMAC = MAC(APIKEYH, nonce)`
+  The client proves knowledge of APIKEY_HASH via:<br />
+  `HMAC = MAC(APIKEY_HASH, nonce)`
 
 - **Registration Flow (Key Separation):**
   On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:<br />
