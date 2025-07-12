@@ -12,12 +12,13 @@ $("#login").on("submit", async (e) => {
   let secretTalks = await Promise.all([
     $.ajax({
       url: "/void/regilo",
-      method: "POST",
-      contentType: "application/json",
-      data: JSON.stringify({
-        uid: uid[1],
+      method: "GET",
+      headers: {
+        Authorization: uid[1],
+      },
+      data: {
         intent: "login",
-      }),
+      },
       error: function (xhr, textStatus, errorThrown) {
         if (xhr.status === 500) {
           alert(

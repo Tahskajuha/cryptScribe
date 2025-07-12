@@ -160,54 +160,77 @@ async function getPlaceholder(index) {
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", (req, res) => {});
+app.get("/void", async (req, res) => {});
 
-app.post("/void/regilo", async (req, res) => {
-  const uid = req.body.uid;
-  const intent = req.body.intent;
+app.post("/void/write", async (req, res) => {});
+
+app.post("/void/pwdreset", async (req, res) => {});
+
+app.get("/void/regilo", async (req, res) => {
+  const uid = req.get("Authorization");
+  const intent = req.query.intent;
   try {
     let qres = await db.query("SELECT * FROM cred_auth WHERE uid = $1", [uid]);
-    if (qres.rowCount === 0 && intent === "register") {
-      let randomVals = await Promise.all([genRandom(), genRandom()]);
-      let index = Math.floor(Math.random() * 30) + 1;
-      let placeholder = await getPlaceholder(index);
-      console.log(placeholder);
-      const now = new Date();
-      const expiry = new Date(now.getTime() + 30000);
-      await Promise.all([
-        runTransaction(async (client) => {
-          await client.query(
-            "INSERT INTO cred_auth (uid, salt, apikeyh) VALUES ($1, $2, $3)",
-            [uid, randomVals[0][1], placeholder],
-          );
-        }),
-        runTransaction(async (client) => {
+    const now = new Date();
+    const expiry = new Date(now.getTime() + 30000);
+
+    let challengeID = -1;
+    if (intent === "register") {
+      challengeID = qres.rowCount === 0 ? 1 : 0;
+    } else if (intent === "login" || intent === "write") {
+      challengeID = qres.rowCount === 1 ? 2 : 0;
+    }
+
+    switch (challengeID) {
+      case 0:
+        const found = intent === "register" ? 1 : 0;
+        return res.json({ found: found });
+
+      case 1:
+        let randomVals = await Promise.all([genRandom(), genRandom()]);
+        let index = Math.floor(Math.random() * 30) + 1;
+        let placeholder = await getPlaceholder(index);
+        console.log(placeholder);
+        await Promise.all([
+          runTransaction(async (client) => {
+            await client.query(
+              "INSERT INTO cred_auth (uid, salt, apikeyh) VALUES ($1, $2, $3)",
+              [uid, randomVals[0][1], placeholder],
+            );
+          }),
+          runTransaction(async (client) => {
+            await client.query(
+              "INSERT INTO nonces (nonce, uid, intent, expires_at) VALUES ($1, $2, $3, $4)",
+              [randomVals[1][1], uid, intent, expiry],
+            );
+          }),
+        ]);
+        return res.json({
+          found: 0,
+          salt: randomVals[0][1],
+          nonce: randomVals[1][1],
+        });
+
+      case 2:
+        await _sodium.ready;
+        const sodium = _sodium;
+        const nonce = await genRandom();
+        await runTransaction(async (client) => {
           await client.query(
             "INSERT INTO nonces (nonce, uid, intent, expires_at) VALUES ($1, $2, $3, $4)",
-            [randomVals[1][1], uid, intent, expiry],
+            [nonce[1], uid, intent, expiry],
           );
-        }),
-      ]);
-      res.json({ found: 0, salt: randomVals[0][1], nonce: randomVals[1][1] });
-    } else if (qres.rowCount === 1 && intent === "login") {
-      await _sodium.ready;
-      const sodium = _sodium;
-      const nonce = await genRandom();
-      const now = new Date();
-      const expiry = new Date(now.getTime() + 30000);
-      await runTransaction(async (client) => {
-        await client.query(
-          "INSERT INTO nonces (nonce, uid, intent, expires_at) VALUES ($1, $2, $3, $4)",
-          [nonce[1], uid, intent, expiry],
-        );
-      });
-      res.json({ found: 1, salt: qres.rows[0].salt, nonce: nonce[1] });
-    } else if (qres.rowCount === 0 && intent === "login") {
-      res.json({ found: 0 });
-    } else if (qres.rowCount === 1 && intent === "register") {
-      res.json({ found: 1 });
-    } else {
-      throw Error.message("Unexpected State Reached");
+        });
+        return res.json({
+          found: 1,
+          salt: qres.rows[0].salt,
+          nonce: nonce[1],
+        });
+
+      case -1:
+      default:
+        throw new Error("Unexpected State Reached");
+        break;
     }
   } catch (err) {
     console.log(err);
@@ -256,7 +279,7 @@ app.post("/void/gin", async (req, res) => {
             iat: Date.now(),
             exp: Date.now() + 600000,
           },
-          process.env.READ,
+          result.intent === "write" ? process.env.WRITE : process.env.READ,
           { algorithm: HS256 },
         );
         return res.json({ verified: 1, token: token });
@@ -266,7 +289,7 @@ app.post("/void/gin", async (req, res) => {
     } else if (checkReq[0].rowCount === 0) {
       res.json({ verified: 0 });
     } else {
-      throw Error(
+      throw new Error(
         "Weird value returned from login query: \n" +
           JSON.stringify(checkReq[0]),
       );
@@ -331,7 +354,7 @@ app.post("/void/ster", async (req, res) => {
     } else if (checkReq.rowCount === 0) {
       return res.json({ verified: 0 });
     } else {
-      throw Error(
+      throw new Error(
         "Weird value returned from registration query: \n" +
           JSON.stringify(checkReq),
       );
@@ -341,8 +364,6 @@ app.post("/void/ster", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-app.post("/void/write", async (req, res) => {});
 
 //================================================<Server Start and End>==============================================
 app.listen(webPort, async () => {
