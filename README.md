@@ -67,29 +67,29 @@
 
 This app is built around a zero-plaintext, zero-trust model. The backend is stateless, never receives or stores any plaintext user identifiers, passwords or encryption keys.
 
-- **Key Derivation Chain:**
+- **Key Derivation Chain:**<br />
   `APIKEY = Argon2id(password, salt=blake2b(uuid))
-APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server`
+APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server`<br />
   A total of **10 salt rounds** are used across UUID + password -> APIKEY -> APIKEY_HASH, enforcing resilience against brute-force attacks.
 
 - **Zero-Knowledge UID Verification:**
   UUID is never sent as plaintext. Instead, the client sends blake2b(UUID). The server compares it against the hash it has -- no secrets exposed.
 
 - **Challenge-Response Nonce Protocol:**
-  If the UUID hash is valid, the server returns a fresh, time-bound, intent-specific nonce and a 32 B salt generated using crypto-safe random generator and assigned to that UUID on registration.
+  If the UUID hash is valid, the server returns a fresh, time-bound, intent-specific nonce and a 32 B salt generated using crypto-safe random generator and assigned to that UUID on registration.<br />
   Additionally, a nonce cleaner prunes stale nonces while redundant checks at response endpoints make absolutely certain that no expired nonce gets through.
 
 - **Login via HMAC:**
-  The client proves knowledge of APIKEYH via:
+  The client proves knowledge of APIKEYH via:<br />
   `HMAC = MAC(APIKEYH, nonce)`
 
 - **Registration Flow (Key Separation):**
-  On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:
-  `ENCKEYH = blake2b(ENCKEY)`
+  On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:<br />
+  `ENCKEYH = blake2b(ENCKEY)`<br />
   The encryption key never touches the backend -- ever.
 
 - **Encrypted Data Association:**
-  All user entries are encrypted with the client-held ENCKEY. Data is stored server-side only under ENCKEYH and read/write actions require a valid JWT containing it.
+  All user entries are encrypted with the client-held ENCKEY. Data is stored server-side only under ENCKEYH and read/write actions require a valid JWT containing it.<br />
   ENCKEYH alone is useless to the server or any attacker without ENCKEY.
 
 - **Strict DB Acess Model:**
