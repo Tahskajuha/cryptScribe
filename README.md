@@ -68,8 +68,8 @@
 This app is built around a zero-plaintext, zero-trust model. The backend is stateless, never receives or stores any plaintext user identifiers, passwords or encryption keys.
 
 - **Key Derivation Chain:**<br />
-  `APIKEY = Argon2id(password, salt=blake2b(uuid))
-APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server`<br />
+  `APIKEY = Argon2id(password, salt=blake2b(uuid))`<br />
+  `APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server`<br />
   A total of **10 salt rounds** are used across UUID + password -> APIKEY -> APIKEY_HASH, enforcing resilience against brute-force attacks.
 
 - **Zero-Knowledge UID Verification:**
