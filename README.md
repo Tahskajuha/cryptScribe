@@ -31,7 +31,7 @@
 
 ## **Current Development Roadmap**
 
-### **Core Infrastructure (completed)**
+### **Completed**
 
 - [x] Set up project dependencies and structure.
 - [x] Challenge endpoint for initiating auth.
@@ -67,29 +67,36 @@
 
 This app is built around a zero-plaintext, zero-trust model. The backend is stateless, never receives or stores any plaintext user identifiers, passwords or encryption keys.
 
-- **Key Derivation Chain:**<br />
-  `APIKEY = Argon2id(password, salt=blake2b(uuid))`<br />
-  `APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server`<br />
+- **Key Derivation Chain:**
+  ```
+  APIKEY = Argon2id(password, salt=blake2b(uuid))
+  APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server
+  ```
   A total of **10 salt rounds** are used across UUID + password -> APIKEY -> APIKEY_HASH, enforcing resilience against brute-force attacks.
 
 - **Zero-Knowledge UID Verification:**
   UUID is never sent as plaintext. Instead, the client sends blake2b(UUID). The server compares it against the hash it has -- no secrets exposed.
 
 - **Challenge-Response Nonce Protocol:**
-  If the UUID hash is valid, the server returns a fresh, time-bound, intent-specific nonce and a 32 B salt generated using crypto-safe random generator and assigned to that UUID on registration.<br />
+  If the UUID hash is valid, the server returns a fresh, time-bound, intent-specific nonce and a 32 B salt generated using crypto-safe random generator and assigned to that UUID on registration.
+
   Additionally, a nonce cleaner prunes stale nonces while redundant checks at response endpoints make absolutely certain that no expired nonce gets through.
 
 - **Login via HMAC:**
-  The client proves knowledge of APIKEY_HASH via:<br />
-  `HMAC = MAC(APIKEY_HASH, nonce)`
+  The client proves knowledge of APIKEY_HASH via:
+  ```
+  HMAC = MAC(APIKEY_HASH, nonce)
+  ```
 
 - **Registration Flow (Key Separation):**
-  On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:<br />
-  `ENCKEYH = blake2b(ENCKEY)`<br />
+  On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:
+  ```
+  ENCKEYH = blake2b(ENCKEY)
+  ```
   The encryption key never touches the backend -- ever.
 
 - **Encrypted Data Association:**
-  All user entries are encrypted with the client-held ENCKEY. Data is stored server-side only under ENCKEYH and read/write actions require a valid JWT containing it.<br />
+  All user entries are encrypted with the client-held ENCKEY. Data is stored server-side only under ENCKEYH and read/write actions require a valid JWT containing it.  
   ENCKEYH alone is useless to the server or any attacker without ENCKEY.
 
 - **Strict DB Acess Model:**
