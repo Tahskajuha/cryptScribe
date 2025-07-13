@@ -153,14 +153,15 @@ async function getPlaceholder(index) {
       "UPDATE placeholders SET ready = false WHERE index = $1",
       [picked.index],
     );
-    console.log(picked.placeholderkey);
     return picked.placeholderkey;
   });
   return placeholder;
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", async (req, res) => {});
+app.get("/void", async (req, res) => {
+  res.render("Hello World!");
+});
 
 app.post("/void/write", async (req, res) => {});
 
@@ -190,7 +191,6 @@ app.get("/void/regilo", async (req, res) => {
         let randomVals = await Promise.all([genRandom(), genRandom()]);
         let index = Math.floor(Math.random() * 30) + 1;
         let placeholder = await getPlaceholder(index);
-        console.log(placeholder);
         await Promise.all([
           runTransaction(async (client) => {
             await client.query(
@@ -280,7 +280,7 @@ app.post("/void/gin", async (req, res) => {
             exp: Date.now() + 600000,
           },
           result.intent === "write" ? process.env.WRITE : process.env.READ,
-          { algorithm: HS256 },
+          { algorithm: "HS256" },
         );
         return res.json({ verified: 1, token: token });
       } else {
@@ -348,7 +348,7 @@ app.post("/void/ster", async (req, res) => {
           exp: Date.now() + 600000,
         },
         process.env.READ,
-        { algorithm: HS256 },
+        { algorithm: "HS256" },
       );
       return res.json({ verified: 1, token: token });
     } else if (checkReq.rowCount === 0) {

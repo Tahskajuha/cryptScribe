@@ -1,18 +1,21 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  root: "./webApp/frontend",
+  plugins: [react()],
+  root: "./frontend",
   build: {
-    outDir: "./webApp/public",
+    outDir: "./public",
     emptyOutDir: true,
     rollupOptions: {
       input: {
         auth: resolve(__dirname, "frontend/auth.html"),
-        app: resolve(__dirname, "frontend/index.html"),
+        app: resolve(__dirname, "frontend/app.html"),
+        gate: resolve(__dirname, "frontend/index.html"),
       },
     },
   },

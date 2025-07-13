@@ -4,7 +4,7 @@
   "description": "Web Journal App",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently 'vite' 'nodemon webApp/index.js'"
+    "dev": "concurrently 'vite' 'nodemon /index.js'"
   },
   "keywords": [],
   "author": "Tahskajuha",

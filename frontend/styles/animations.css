@@ -1,5 +1,28 @@
+:root {
+  color-scheme: dark;
+}
+html {
+  overflow-y: auto;
+  min-height: 100%;
+}
 body {
+  min-height: 100vh;
+  min-width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Cantarell", sans-serif;
+  overflow-y: auto;
   background-color: black;
+}
+#content {
+  border-radius: 15px;
+  background: #262626;
+  position: fixed;
+  width: 75%;
+  height: 80%;
+  overflow-y: auto;
+  z-index: 1;
 }
 .fade {
   transition: opacity 0.4s ease 1s;
@@ -82,4 +105,10 @@ button:disabled {
 }
 button:disabled:hover::before {
   transform: none;
+}
+@media (max-width: 1024px) {
+  #content {
+    min-height: 100vh;
+    min-width: 100vw;
+  }
 }
