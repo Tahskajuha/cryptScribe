@@ -159,9 +159,7 @@ async function getPlaceholder(index) {
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", async (req, res) => {
-  res.render("Hello World!");
-});
+app.get("/void", async (req, res) => {});
 
 app.post("/void/write", async (req, res) => {});
 
@@ -180,12 +178,13 @@ app.get("/void/regilo", async (req, res) => {
       challengeID = qres.rowCount === 0 ? 1 : 0;
     } else if (intent === "login" || intent === "write") {
       challengeID = qres.rowCount === 1 ? 2 : 0;
+    } else {
+      return res.status(401);
     }
 
     switch (challengeID) {
       case 0:
-        const found = intent === "register" ? 1 : 0;
-        return res.json({ found: found });
+        return res.status(402);
 
       case 1:
         let randomVals = await Promise.all([genRandom(), genRandom()]);
@@ -205,8 +204,7 @@ app.get("/void/regilo", async (req, res) => {
             );
           }),
         ]);
-        return res.json({
-          found: 0,
+        return res.status(201).json({
           salt: randomVals[0][1],
           nonce: randomVals[1][1],
         });
@@ -221,8 +219,7 @@ app.get("/void/regilo", async (req, res) => {
             [nonce[1], uid, intent, expiry],
           );
         });
-        return res.json({
-          found: 1,
+        return res.status(201).json({
           salt: qres.rows[0].salt,
           nonce: nonce[1],
         });
@@ -282,12 +279,12 @@ app.post("/void/gin", async (req, res) => {
           result.intent === "write" ? process.env.WRITE : process.env.READ,
           { algorithm: "HS256" },
         );
-        return res.json({ verified: 1, token: token });
+        return res.status(200).json({ token: token });
       } else {
-        return res.json({ verified: 0 });
+        return res.status(402);
       }
     } else if (checkReq[0].rowCount === 0) {
-      res.json({ verified: 0 });
+      return res.status(402);
     } else {
       throw new Error(
         "Weird value returned from login query: \n" +
@@ -350,9 +347,9 @@ app.post("/void/ster", async (req, res) => {
         process.env.READ,
         { algorithm: "HS256" },
       );
-      return res.json({ verified: 1, token: token });
+      return res.status(201).json({ token: token });
     } else if (checkReq.rowCount === 0) {
-      return res.json({ verified: 0 });
+      return res.status(402);
     } else {
       throw new Error(
         "Weird value returned from registration query: \n" +

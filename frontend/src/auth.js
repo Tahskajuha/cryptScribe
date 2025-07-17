@@ -5,40 +5,32 @@ await utils.domReady();
 await utils.animations.pageLand();
 
 $("#login").on("submit", async (e) => {
-  e.preventDefault();
-  const data = new FormData(e.target);
-  $("#content").addClass("hidden");
-  let uid = await utils.tth16(data.get("username"));
-  let secretTalks = await Promise.all([
-    $.ajax({
-      url: "/void/regilo",
-      method: "GET",
-      headers: {
-        Authorization: uid[1],
-      },
-      data: {
-        intent: "login",
-      },
-      error: function (xhr, textStatus, errorThrown) {
-        if (xhr.status === 500) {
-          alert(
-            "Sorry about that, looks like the server is facing some issues. Please try again later!",
-          );
-          window.location.reload();
-        }
-      },
-    }),
-    argon2.hash({
-      pass: data.get("password"),
-      salt: uid[0],
-      time: 5,
-      mem: 65536,
-      parallelism: 1,
-      hashLen: 24,
-      type: argon2.ArgonType.Argon2id,
-    }),
-  ]);
-  if (secretTalks[0].found === 1) {
+  try {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    $("#content").addClass("hidden");
+    let uid = await utils.tth16(data.get("username"));
+    let secretTalks = await Promise.all([
+      $.ajax({
+        url: "/void/regilo",
+        method: "GET",
+        headers: {
+          Authorization: uid[1],
+        },
+        data: {
+          intent: "login",
+        },
+      }),
+      argon2.hash({
+        pass: data.get("password"),
+        salt: uid[0],
+        time: 5,
+        mem: 65536,
+        parallelism: 1,
+        hashLen: 24,
+        type: argon2.ArgonType.Argon2id,
+      }),
+    ]);
     let salt = await utils.fromB64(secretTalks[0].salt);
     let nonce = await utils.fromB64(secretTalks[0].nonce);
     const apikeyh = await argon2.hash({
@@ -60,33 +52,25 @@ $("#login").on("submit", async (e) => {
         hmac: hmacB64,
         nonce: secretTalks[0].nonce,
       }),
-      error: function (xhr, textStatus, errorThrown) {
-        if (xhr.status === 500) {
-          alert(
-            "Sorry about that, looks like the server is facing some issues. Please try again later!",
-          );
-          window.location.reload();
-        }
-      },
     });
-    if (loginResponse.verified === 1) {
-      const token = loginResponse.token;
-      sessionStorage.setItem("token", token);
-      await utils.animations.pageLeave();
-      window.location.href = "/app.html";
-    } else if (loginResponse.verified === 0) {
+    const token = loginResponse.token;
+    sessionStorage.setItem("token", token);
+    await utils.animations.pageLeave();
+    window.location.href = "/app.html";
+  } catch (err) {
+    if (err.status === 402) {
       await utils.wait(1000);
       $("#content").removeClass("hidden");
       $("#pwdReset").removeClass("hidden");
       $("#loginErr").removeClass("hidden");
+    } else if (err.status === 500) {
+      alert(
+        "Sorry about that! Looks like the server is facing some issues. Please try again later.",
+      );
+      window.location.reload();
     } else {
-      alert("Internal Server Error!");
+      console.error(err);
     }
-  } else if (secretTalks[0].found === 0) {
-    await utils.wait(2000);
-    $("#content").removeClass("hidden");
-    $("#pwdReset").removeClass("hidden");
-    $("#loginErr").removeClass("hidden");
   }
 });
 
@@ -116,40 +100,32 @@ $("#pwdGen, #pwdConfirm").on("blur", () => {
 });
 
 $("#register").on("submit", async (e) => {
-  e.preventDefault();
-  const data = new FormData(e.target);
-  $("#content").addClass("hidden");
-  const uid = await utils.tth16(data.get("username"));
-  let secretTalks = await Promise.all([
-    $.ajax({
-      url: "/void/regilo",
-      method: "GET",
-      headers: {
-        Authorization: uid[1],
-      },
-      data: {
-        intent: "register",
-      },
-      error: function (xhr, textStatus, errorThrown) {
-        if (xhr.status === 500) {
-          alert(
-            "Sorry about that, looks like the server is facing some issues. Please try again later!",
-          );
-          window.location.reload();
-        }
-      },
-    }),
-    argon2.hash({
-      pass: data.get("password"),
-      salt: uid[0],
-      time: 5,
-      mem: 65536,
-      parallelism: 1,
-      hashLen: 24,
-      type: argon2.ArgonType.Argon2id,
-    }),
-  ]);
-  if (secretTalks[0].found === 0) {
+  try {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    $("#content").addClass("hidden");
+    const uid = await utils.tth16(data.get("username"));
+    let secretTalks = await Promise.all([
+      $.ajax({
+        url: "/void/regilo",
+        method: "GET",
+        headers: {
+          Authorization: uid[1],
+        },
+        data: {
+          intent: "register",
+        },
+      }),
+      argon2.hash({
+        pass: data.get("password"),
+        salt: uid[0],
+        time: 5,
+        mem: 65536,
+        parallelism: 1,
+        hashLen: 24,
+        type: argon2.ArgonType.Argon2id,
+      }),
+    ]);
     let salt = await utils.fromB64(secretTalks[0].salt);
     let nonce = await utils.fromB64(secretTalks[0].nonce);
     await utils.wait(1000);
@@ -181,34 +157,28 @@ $("#register").on("submit", async (e) => {
         enckeyh: hashes[1][1],
         nonce: secretTalks[0].nonce,
       }),
-      error: function (xhr, textStatus, errorThrown) {
-        if (xhr.status === 500) {
-          alert(
-            "Sorry about that, looks like the server is facing some issues. Please try again later!",
-          );
-          window.location.reload();
-        }
-      },
     });
-    if (regResponse.verified === 1) {
-      const token = regResponse.token;
-      sessionStorage.setItem("token", token);
-      $("#keyConfirmButton").prop("disabled", false);
-      $("#keyConfirmButton").on("click", async () => {
-        $("#secret").addClass("hidden");
-        await utils.animations.pageLeave();
-        window.location.href = "/app.html";
-      });
-    } else if (regResponse.verified === 0) {
-      await utils.wait(2000);
+    const token = regResponse.token;
+    sessionStorage.setItem("token", token);
+    $("#keyConfirmButton").prop("disabled", false);
+    $("#keyConfirmButton").on("click", async () => {
+      $("#secret").addClass("hidden");
+      await utils.animations.pageLeave();
+      window.location.href = "/app.html";
+    });
+  } catch (err) {
+    if (err.status === 402) {
+      await utils.wait(1000);
       $("#content").removeClass("hidden");
       $("#pwdReset").removeClass("hidden");
       $("#registerErr").removeClass("hidden");
+    } else if (err.status === 500) {
+      alert(
+        "Sorry about that! Looks like the server is facing some issues. Please try again later.",
+      );
+      window.location.reload();
+    } else {
+      console.error(err);
     }
-  } else if (secretTalks[0].found === 1) {
-    await utils.wait(2000);
-    $("#content").removeClass("hidden");
-    $("#pwdReset").removeClass("hidden");
-    $("#registerErr").removeClass("hidden");
   }
 });
