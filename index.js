@@ -98,11 +98,11 @@ async function nonceCleaner() {
         for (const { uid } of expired.rows) {
           await client.query("DELETE FROM nonces WHERE uid = $1", [uid]);
           const authRes = await client.query(
-            "SELECT placeholderkey FROM cred_auth WHERE uid = $1",
+            "SELECT apikeyh FROM cred_auth WHERE uid = $1",
             [uid],
           );
           if (authRes.rowCount > 0) {
-            const placeholderkey = authRes.rows[0].placeholderkey;
+            const placeholderkey = authRes.rows[0].apikeyh;
             await client.query("DELETE FROM cred_auth WHERE uid = $1", [uid]);
             await client.query(
               "UPDATE placeholders SET ready = true WHERE placeholderkey = $1",
@@ -159,7 +159,23 @@ async function getPlaceholder(index) {
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", async (req, res) => {});
+app.get("/void", async (req, res) => {
+  const token = req.get("Authorization");
+  try {
+    const decoded = jwt.verify(token, process.env.READ);
+    return res.status(200).json({ enckeyh: decoded.sub });
+  } catch (err) {
+    switch (err.name) {
+      case "TokenExpiredError":
+      case "JsonWebTokenError":
+      case "NotBeforeError":
+        console.log("Token Expired");
+        return res.sendStatus(401);
+      default:
+        return res.sendStatus(500);
+    }
+  }
+});
 
 app.post("/void/write", async (req, res) => {});
 
@@ -265,7 +281,7 @@ app.post("/void/gin", async (req, res) => {
       const nonceUint = sodium.from_base64(nonce);
       const apikeyhUint = sodium.from_base64(result.apikeyh);
       const valid = sodium.crypto_auth_verify(hmacUint, apikeyhUint, nonceUint);
-      if (valid === true) {
+      if (valid) {
         const keyMap = await db.query(
           "Select * FROM api_auth WHERE apikeyh = $1",
           [result.apikeyh],
@@ -273,11 +289,9 @@ app.post("/void/gin", async (req, res) => {
         const token = jwt.sign(
           {
             sub: keyMap.rows[0].enckeyh,
-            iat: Date.now(),
-            exp: Date.now() + 600000,
           },
           result.intent === "write" ? process.env.WRITE : process.env.READ,
-          { algorithm: "HS256" },
+          { algorithm: "HS256", expiresIn: 600000 },
         );
         return res.status(200).json({ token: token });
       } else {
@@ -369,10 +383,12 @@ app.listen(webPort, async () => {
     let newph = await genRandom();
     placeholder.push(newph[1]);
   }
-  await db.query(
-    "INSERT INTO placeholders (placeholderkey, ready) SELECT value, true FROM UNNEST($1::text[]) AS value",
-    [placeholder],
-  );
+  await runTransaction((client) => {
+    client.query(
+      "INSERT INTO placeholders (placeholderkey, ready) SELECT value, true FROM UNNEST($1::text[]) AS value",
+      [placeholder],
+    );
+  });
   process.env.READ = (await genRandom())[1];
   process.env.WRITE = (await genRandom())[1];
   await nonceCleaner();

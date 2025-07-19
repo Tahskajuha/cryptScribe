@@ -1,6 +1,6 @@
 import $ from "jquery";
 import utils from "/src/utils.js";
-await utils.domReady();
+await Promise.all([utils.domReady(), utils.sodiumReady]);
 
 await utils.animations.pageLand();
 
@@ -9,7 +9,7 @@ $("#login").on("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
     $("#content").addClass("hidden");
-    let uid = await utils.tth16(data.get("username"));
+    let uid = utils.tth16(data.get("username"));
     let secretTalks = await Promise.all([
       $.ajax({
         url: "/void/regilo",
@@ -31,8 +31,8 @@ $("#login").on("submit", async (e) => {
         type: argon2.ArgonType.Argon2id,
       }),
     ]);
-    let salt = await utils.fromB64(secretTalks[0].salt);
-    let nonce = await utils.fromB64(secretTalks[0].nonce);
+    let salt = utils.fromB64(secretTalks[0].salt);
+    let nonce = utils.fromB64(secretTalks[0].nonce);
     const apikeyh = await argon2.hash({
       pass: secretTalks[1].hash,
       salt: salt,
@@ -42,8 +42,8 @@ $("#login").on("submit", async (e) => {
       hashLen: 32,
       type: argon2.ArgonType.Argon2id,
     });
-    const hmac = await utils.mac(apikeyh.hash, nonce);
-    const hmacB64 = await utils.toB64(hmac);
+    const hmac = utils.mac(apikeyh.hash, nonce);
+    const hmacB64 = utils.toB64(hmac);
     const loginResponse = await $.ajax({
       url: "/void/gin",
       method: "POST",
@@ -104,7 +104,7 @@ $("#register").on("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
     $("#content").addClass("hidden");
-    const uid = await utils.tth16(data.get("username"));
+    const uid = utils.tth16(data.get("username"));
     let secretTalks = await Promise.all([
       $.ajax({
         url: "/void/regilo",
@@ -126,35 +126,33 @@ $("#register").on("submit", async (e) => {
         type: argon2.ArgonType.Argon2id,
       }),
     ]);
-    let salt = await utils.fromB64(secretTalks[0].salt);
-    let nonce = await utils.fromB64(secretTalks[0].nonce);
+    let salt = utils.fromB64(secretTalks[0].salt);
+    let nonce = utils.fromB64(secretTalks[0].nonce);
     await utils.wait(1000);
     $("#secret").removeClass.hidden;
-    const hashes = await Promise.all([
-      argon2.hash({
-        pass: secretTalks[1].hash,
-        salt: salt,
-        time: 5,
-        mem: 65536,
-        parallelism: 1,
-        hashLen: 32,
-        type: argon2.ArgonType.Argon2id,
-      }),
-      utils.keygen(),
-    ]);
-    $("#key").val(hashes[1][0]);
+    const hash = await argon2.hash({
+      pass: secretTalks[1].hash,
+      salt: salt,
+      time: 5,
+      mem: 65536,
+      parallelism: 1,
+      hashLen: 32,
+      type: argon2.ArgonType.Argon2id,
+    });
+    const key = utils.keygen();
+    $("#key").val(key[0]);
     $("#copy").on("click", () => {
-      navigator.clipboard.writeText(hashes[1][0]);
+      navigator.clipboard.writeText(key[0]);
     });
     $("#secret").removeClass("hidden");
-    const hashB64 = await utils.toB64(hashes[0].hash);
+    const hashB64 = utils.toB64(hash.hash);
     const regResponse = await $.ajax({
       url: "/void/ster",
       method: "POST",
       contentType: "application/json",
       data: JSON.stringify({
         apikeyh: hashB64,
-        enckeyh: hashes[1][1],
+        enckeyh: key[1],
         nonce: secretTalks[0].nonce,
       }),
     });

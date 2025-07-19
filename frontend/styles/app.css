@@ -1,0 +1,112 @@
+#app {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  align-items: center;
+  height: 95%;
+}
+input {
+  background-color: #333333;
+  color: white;
+  margin: 10px;
+  border: 0;
+  box-sizing: border-box;
+  padding: 10px 5px;
+  outline: none;
+  font-family: "Cantarell", sans-serif;
+}
+input:focus {
+  border: 2px solid #9c27b0;
+}
+#enckey {
+  flex: 1;
+  font-size: 1.5rem;
+  width: 70rem;
+}
+h4 {
+  color: #e74c3c;
+  text-align: left;
+  margin: 0px;
+  width: 90%;
+  font-style: italic;
+}
+input::placeholder {
+  font-style: italic;
+  letter-spacing: 2px;
+}
+#mainBoard {
+  flex: 10;
+  display: flex;
+  flex-direction: row;
+  width: 70rem;
+  margin: 10px;
+}
+#editor {
+  height: 100%;
+  margin: 10px;
+  margin-left: 0px;
+  flex: 7;
+  resize: none;
+  overflow: auto;
+  white-space: pre-wrap;
+  padding: 10px;
+  font-size: 1.25rem;
+}
+#editor:enabled::placeholder {
+  opacity: 0;
+}
+#editor:disabled::placeholder {
+  opacity: 1;
+  font-style: italic;
+  letter-spacing: 2px;
+}
+#entrylist {
+  margin: 10px;
+  padding: 0px;
+  padding-bottom: 20px;
+  height: 100%;
+  flex: 2;
+  background-color: #333333;
+  list-style-type: none;
+}
+#entrylist li {
+  margin: 5px;
+}
+#entrylist button {
+  all: unset;
+  user-select: none;
+  padding: 0.5rem;
+  padding-right: 0px;
+  background-color: #444;
+  color: white;
+  cursor: pointer;
+  display: block;
+  width: 95%;
+}
+#entrylist button::before {
+  all: unset;
+}
+#entrylist button:active {
+  background-color: #222;
+  transform: scale(0.95);
+}
+#write {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  width: 90%;
+  flex: 1;
+  margin: 10px;
+  margin-top: 40px;
+}
+#uid {
+  flex: 4;
+}
+#pwd {
+  flex: 4;
+}
+#sync {
+  height: 75%;
+  flex: 1;
+}

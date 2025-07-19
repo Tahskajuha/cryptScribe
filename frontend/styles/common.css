@@ -66,46 +66,6 @@ body {
   z-index: -2;
   pointer-events: none;
 }
-button {
-  position: relative;
-  background: #6a0dad;
-  color: white;
-  font-family: "Cantarell", sans-serif;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 0px;
-  padding: 5px;
-}
-button span {
-  position: relative;
-  z-index: 1;
-}
-button::before {
-  position: absolute;
-  height: 100%;
-  top: 0;
-  content: "";
-  background: #000;
-  width: 120%;
-  left: -10%;
-  transform: skew(30deg);
-  transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
-  z-index: 0;
-}
-button:hover::before {
-  transform: translate3d(100%, 0, 0);
-}
-button:active {
-  transform: scale(0.95);
-}
-button:disabled {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
-}
-button:disabled:hover::before {
-  transform: none;
-}
 @media (max-width: 1024px) {
   #content {
     min-height: 100vh;

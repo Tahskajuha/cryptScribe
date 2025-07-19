@@ -24,10 +24,14 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function domReady() {
+function domReady() {
   return new Promise((resolve) => {
     $(resolve);
   });
+}
+
+async function sodiumReady() {
+  await _sodium.ready;
 }
 
 function concatUint8Arrays(a, b) {
@@ -37,23 +41,23 @@ function concatUint8Arrays(a, b) {
   return result;
 }
 
-async function encrypt(message, key) {
-  await _sodium.ready;
+function encrypt(message, key) {
   const sodium = _sodium;
+  const uintKey = sodium.from_base64(key);
   const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
   const msgBytes = sodium.from_string(message);
-  const ciphertext = sodium.crypto_secretbox_easy(msgBytes, nonce, key);
+  const ciphertext = sodium.crypto_secretbox_easy(msgBytes, nonce, uintKey);
   return sodium.to_base64(concatUint8Arrays(nonce, ciphertext));
 }
 
-async function decrypt(ctbase64, key) {
-  await _sodium.ready;
-  const sodium = _sodium;
-  let ciphertext = sodium.from_base64(ctbase64);
-  let nonce = ciphertext.slice(0, sodium.crypto_secretbox_NONCEBYTES);
-  ciphertext = ciphertext.slice(sodium.crypto_secretbox_NONCEBYTES);
+function decrypt(ctbase64, key) {
+  let sodium = _sodium;
   try {
-    let message = sodium.crypto_secretbox_open_easy(ciphertext, nonce, key);
+    let ciphertext = sodium.from_base64(ctbase64);
+    const uintKey = sodium.from_base64(key);
+    const nonce = ciphertext.slice(0, sodium.crypto_secretbox_NONCEBYTES);
+    ciphertext = ciphertext.slice(sodium.crypto_secretbox_NONCEBYTES);
+    let message = sodium.crypto_secretbox_open_easy(ciphertext, nonce, uintKey);
     if (!message) {
       throw new Error(
         "Decryption failed: ciphertext may have been tampered with or the key is incorrect.",
@@ -61,12 +65,11 @@ async function decrypt(ctbase64, key) {
     }
     return sodium.to_string(message);
   } catch (err) {
-    throw err;
+    console.log(err);
   }
 }
 
-async function keygen() {
-  await _sodium.ready;
+function keygen() {
   let sodium = _sodium;
 
   let uintKey = sodium.crypto_secretbox_keygen();
@@ -75,8 +78,7 @@ async function keygen() {
   return [key, keyHash];
 }
 
-async function tth16(text) {
-  await _sodium.ready;
+function tth16(text) {
   let sodium = _sodium;
 
   let h = sodium.crypto_generichash(16, text);
@@ -84,22 +86,26 @@ async function tth16(text) {
   return [h, h64];
 }
 
-async function mac(message, key) {
-  await _sodium.ready;
+function mac(message, key) {
   let sodium = _sodium;
   return sodium.crypto_auth(message, key);
 }
 
-async function fromB64(text) {
-  await _sodium.ready;
+function fromB64(text) {
   let sodium = _sodium;
   return sodium.from_base64(text);
 }
 
-async function toB64(uintArrayy) {
-  await _sodium.ready;
+function toB64(uintArrayy) {
   let sodium = _sodium;
   return sodium.to_base64(uintArrayy);
+}
+
+function b2bMatch(key, hash) {
+  let sodium = _sodium;
+  const uintKey = sodium.from_base64(key);
+  const keyHash = sodium.to_base64(sodium.crypto_generichash(32, uintKey));
+  return keyHash === hash;
 }
 
 export default {
@@ -113,4 +119,5 @@ export default {
   mac,
   fromB64,
   toB64,
+  b2bMatch,
 };
