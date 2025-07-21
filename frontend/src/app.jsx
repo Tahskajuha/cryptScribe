@@ -1,12 +1,17 @@
 import React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import "/styles/buttons.css";
 import "/styles/app.css";
 import utils from "/src/utils.js";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
+import { EditorContent, useEditor } from "@tiptap/react";
 
 const KeyCheck = createContext();
-const EntryNum = createContext();
+const Udata = createContext();
+const EncText = createContext();
 
 function CurrentKeyProvider({ children }) {
   const [enckey, setEnckey] = useState("");
@@ -17,12 +22,12 @@ function CurrentKeyProvider({ children }) {
   );
 }
 
-function EntryNumProvider({ children }) {
-  const [entrynum, setentrynum] = useState(null);
+function EncTextProvider({ children }) {
+  const [encrypted, setEncrypted] = useState("");
   return (
-    <EntryNum.Provider value={{ entrynum, setentrynum }}>
+    <EncText.Provider value={{ encrypted, setEncrypted }}>
       {children}
-    </EntryNum.Provider>
+    </EncText.Provider>
   );
 }
 
@@ -59,29 +64,87 @@ function KeyError() {
 
 function Editor() {
   const { enckey } = useContext(KeyCheck);
-  const [encrypted, setEncrypted] = useState("");
-  return (
-    <textarea
-      id="editor"
-      disabled={enckey ? false : true}
-      placeholder="Select an entry or create a new one!"
-      a
-      onChange={(e) => {
-        const newText = e.target.value;
-        if (enckey) {
-          setEncrypted(utils.encrypt(newText, enckey));
+  const { encrypted, setEncrypted } = useContext(EncText);
+  const currentEncrypted = useRef(encrypted);
+  const suppressUpdate = useRef(false);
+  const editor = useEditor({
+    extensions: [Document, Paragraph, Text],
+    content: "",
+    editable: false,
+    onUpdate({ editor }) {
+      if (suppressUpdate.current) {
+        suppressUpdate.current = false;
+        return;
+      } else if (enckey) {
+        try {
+          currentEncrypted.current = utils.encrypt(editor.getHTML(), enckey);
+        } catch (err) {
+          console.log(err);
         }
-      }}
-      value={enckey ? utils.decrypt(encrypted, enckey) : encrypted}
-    ></textarea>
+      }
+    },
+  });
+  useEffect(() => {
+    if (editor) {
+      suppressUpdate.current = true;
+      editor.setEditable(enckey ? true : false);
+      editor.commands.setContent(
+        enckey
+          ? utils.decrypt(currentEncrypted.current, enckey)
+          : currentEncrypted.current,
+      );
+    }
+  }, [enckey]);
+  useEffect(() => {
+    currentEncrypted.current = encrypted;
+    if (editor) {
+      editor.commands.setContent(
+        enckey
+          ? utils.decrypt(currentEncrypted.current, enckey)
+          : currentEncrypted.current,
+      );
+    }
+  }, [encrypted]);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (encrypted !== currentEncrypted.current) {
+        setEncrypted(currentEncrypted.current);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  });
+  return (
+    <div id="editor">
+      <EditorContent editor={editor} />
+    </div>
   );
 }
 
 function EntryList() {
+  const { udata, setUdata } = useContext(Udata);
+  const { encrypted, setEncrypted } = useContext(EncText);
+  const currentNum = useRef(null);
+  const keys = Object.keys(udata).filter((k) => /^\d+$/.test(k));
+  useEffect(() => {
+    if (currentNum.current !== null) {
+      setUdata({ ...udata, [currentNum.current]: encrypted });
+    }
+  }, [encrypted, setUdata]);
   return (
     <ul id="entrylist">
+      {keys.map((key) => (
+        <li key={key}>
+          <button>{key /* Add an onclick function here later */}</button>
+        </li>
+      ))}
       <li>
-        <button>+ New Entry</button>
+        <button
+          onClick={() => {
+            setUdata({ ...udata, [Object.keys(udata).length]: "" });
+          }}
+        >
+          + New Entry
+        </button>
       </li>
     </ul>
   );
@@ -99,21 +162,24 @@ function Write() {
   );
 }
 
-function App({ udata }) {
+function App({ mainObj }) {
+  const [udata, setUdata] = useState(mainObj);
   return (
-    <div id="app">
-      <CurrentKeyProvider>
-        <EncKeyInput keyHash={udata.enckeyh} />
-        <KeyError />
-        <div id="mainBoard">
-          <EntryNumProvider>
-            <Editor />
-            <EntryList />
-          </EntryNumProvider>
-        </div>
-      </CurrentKeyProvider>
-      <Write />
-    </div>
+    <Udata.Provider value={{ udata, setUdata }}>
+      <div id="app">
+        <CurrentKeyProvider>
+          <EncKeyInput keyHash={mainObj.enckeyh} />
+          <KeyError />
+          <div id="mainBoard">
+            <EncTextProvider>
+              <Editor />
+              <EntryList />
+            </EncTextProvider>
+          </div>
+        </CurrentKeyProvider>
+        <Write />
+      </div>
+    </Udata.Provider>
   );
 }
 

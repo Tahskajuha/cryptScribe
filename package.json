@@ -11,6 +11,10 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@tiptap/extension-document": "^3.0.7",
+    "@tiptap/extension-paragraph": "^3.0.7",
+    "@tiptap/extension-text": "^3.0.7",
+    "@tiptap/react": "^3.0.7",
     "@vitejs/plugin-react": "^4.6.0",
     "argon2-browser": "^1.18.0",
     "concurrently": "^9.2.0",

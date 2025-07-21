@@ -34,4 +34,4 @@ const [, , udata] = await Promise.all([
 await utils.animations.pageLand();
 
 const root = ReactDOM.createRoot(document.getElementById("content"));
-root.render(<App udata={udata} />);
+root.render(<App mainObj={udata} />);

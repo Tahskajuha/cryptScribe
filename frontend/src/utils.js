@@ -65,7 +65,14 @@ function decrypt(ctbase64, key) {
     }
     return sodium.to_string(message);
   } catch (err) {
-    console.log(err);
+    if (
+      err instanceof TypeError &&
+      err.message.toLowerCase().includes("ciphertext is too short")
+    ) {
+      console.log("Ignore this one");
+    } else {
+      console.log(err);
+    }
   }
 }
 
