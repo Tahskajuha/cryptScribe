@@ -12,6 +12,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 const KeyCheck = createContext();
 const Udata = createContext();
 const EncText = createContext();
+const CurrentNum = createContext();
 
 function CurrentKeyProvider({ children }) {
   const [enckey, setEnckey] = useState("");
@@ -24,9 +25,12 @@ function CurrentKeyProvider({ children }) {
 
 function EncTextProvider({ children }) {
   const [encrypted, setEncrypted] = useState("");
+  const [currentNum, setCurrentNum] = useState(null);
   return (
     <EncText.Provider value={{ encrypted, setEncrypted }}>
-      {children}
+      <CurrentNum.Provider value={{ currentNum, setCurrentNum }}>
+        {children}
+      </CurrentNum.Provider>
     </EncText.Provider>
   );
 }
@@ -65,6 +69,8 @@ function KeyError() {
 function Editor() {
   const { enckey } = useContext(KeyCheck);
   const { encrypted, setEncrypted } = useContext(EncText);
+  const { currentNum } = useContext(CurrentNum);
+  const [pending, setPending] = useState(encrypted);
   const currentEncrypted = useRef(encrypted);
   const suppressUpdate = useRef(false);
   const editor = useEditor({
@@ -78,6 +84,7 @@ function Editor() {
       } else if (enckey) {
         try {
           currentEncrypted.current = utils.encrypt(editor.getHTML(), enckey);
+          setPending(currentEncrypted.current);
         } catch (err) {
           console.log(err);
         }
@@ -87,16 +94,17 @@ function Editor() {
   useEffect(() => {
     if (editor) {
       suppressUpdate.current = true;
-      editor.setEditable(enckey ? true : false);
+      editor.setEditable(!!enckey && !!currentNum);
       editor.commands.setContent(
         enckey
           ? utils.decrypt(currentEncrypted.current, enckey)
           : currentEncrypted.current,
       );
     }
-  }, [enckey]);
+  }, [enckey, currentNum]);
   useEffect(() => {
     currentEncrypted.current = encrypted;
+    setPending(currentEncrypted.current);
     if (editor) {
       editor.commands.setContent(
         enckey
@@ -112,7 +120,7 @@ function Editor() {
       }
     }, 500);
     return () => clearTimeout(timeout);
-  });
+  }, [pending]);
   return (
     <div id="editor">
       <EditorContent editor={editor} />
@@ -123,24 +131,42 @@ function Editor() {
 function EntryList() {
   const { udata, setUdata } = useContext(Udata);
   const { encrypted, setEncrypted } = useContext(EncText);
-  const currentNum = useRef(null);
+  const { currentNum, setCurrentNum } = useContext(CurrentNum);
   const keys = Object.keys(udata).filter((k) => /^\d+$/.test(k));
-  useEffect(() => {
-    if (currentNum.current !== null) {
-      setUdata({ ...udata, [currentNum.current]: encrypted });
-    }
-  }, [encrypted, setUdata]);
+  useEffect(
+    (prev) => {
+      if (!!currentNum) {
+        setUdata((prev) => {
+          return { ...prev, [currentNum]: encrypted };
+        });
+      }
+    },
+    [encrypted],
+  );
   return (
     <ul id="entrylist">
       {keys.map((key) => (
         <li key={key}>
-          <button>{key /* Add an onclick function here later */}</button>
+          <button
+            disabled={key === currentNum}
+            onClick={() => {
+              setCurrentNum(key);
+              setEncrypted(udata[key]);
+            }}
+          >
+            {key}
+          </button>
         </li>
       ))}
       <li>
         <button
-          onClick={() => {
-            setUdata({ ...udata, [Object.keys(udata).length]: "" });
+          onClick={(prev) => {
+            const keyNum = String(Object.keys(udata).length);
+            setCurrentNum(keyNum);
+            setEncrypted(udata[keyNum]);
+            setUdata((prev) => {
+              return { ...prev, [keyNum]: "" };
+            });
           }}
         >
           + New Entry

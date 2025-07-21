@@ -1,3 +1,6 @@
+#content {
+  height: 90%;
+}
 #app {
   display: flex;
   flex-direction: column;
@@ -21,10 +24,10 @@ input:focus {
 #enckey {
   flex: 1;
   font-size: 1.5rem;
-  width: 70rem;
+  width: 90%;
 }
 h4 {
-  flex: 0.5;
+  flex: 1;
   color: #e74c3c;
   text-align: left;
   margin: 0px;
@@ -36,11 +39,11 @@ input::placeholder {
   letter-spacing: 2px;
 }
 #mainBoard {
-  flex: 11;
+  flex: 33;
   height: 75%;
   display: flex;
   flex-direction: row;
-  width: 70rem;
+  width: 100%;
   margin: 10px;
 }
 #editor {
@@ -101,7 +104,11 @@ input::placeholder {
 #entrylist button::before {
   all: unset;
 }
-#entrylist button:active {
+#entrylist button:not(:disabled):active {
+  background-color: #222;
+  transform: scale(0.95);
+}
+#entrylist button:disabled {
   background-color: #222;
   transform: scale(0.95);
 }
@@ -111,7 +118,7 @@ input::placeholder {
   display: flex;
   flex-direction: row;
   width: 90%;
-  flex: 1;
+  flex: 3;
   margin: 10px;
 }
 #uid {
@@ -123,4 +130,10 @@ input::placeholder {
 #sync {
   height: 75%;
   flex: 1;
+}
+@media (max-height: 768px) {
+  #content {
+    min-height: 100vh;
+    min-width: 100vw;
+  }
 }

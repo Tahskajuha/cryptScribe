@@ -289,9 +289,10 @@ app.post("/void/gin", async (req, res) => {
         const token = jwt.sign(
           {
             sub: keyMap.rows[0].enckeyh,
+            iat: Date.now(),
           },
           result.intent === "write" ? process.env.WRITE : process.env.READ,
-          { algorithm: "HS256", expiresIn: 600000 },
+          { algorithm: "HS256", expiresIn: 600 },
         );
         return res.status(200).json({ token: token });
       } else {
@@ -356,10 +357,9 @@ app.post("/void/ster", async (req, res) => {
         {
           sub: enckeyh,
           iat: Date.now(),
-          exp: Date.now() + 600000,
         },
         process.env.READ,
-        { algorithm: "HS256" },
+        { algorithm: "HS256", expiresIn: 600 },
       );
       return res.status(201).json({ token: token });
     } else if (checkReq.rowCount === 0) {
