@@ -26,10 +26,14 @@ function CurrentKeyProvider({ children }) {
 function EncTextProvider({ children }) {
   const [encrypted, setEncrypted] = useState("");
   const [currentNum, setCurrentNum] = useState(null);
+  const currentEncrypted = useRef("");
+  const childrenWithRef = React.Children.map(children, (child) => {
+    return React.cloneElement(child, { currentEncrypted });
+  });
   return (
     <EncText.Provider value={{ encrypted, setEncrypted }}>
       <CurrentNum.Provider value={{ currentNum, setCurrentNum }}>
-        {children}
+        {childrenWithRef}
       </CurrentNum.Provider>
     </EncText.Provider>
   );
@@ -66,12 +70,12 @@ function KeyError() {
   );
 }
 
-function Editor() {
+function Editor({ currentEncrypted }) {
   const { enckey } = useContext(KeyCheck);
   const { encrypted, setEncrypted } = useContext(EncText);
   const { currentNum } = useContext(CurrentNum);
   const [pending, setPending] = useState(encrypted);
-  const currentEncrypted = useRef(encrypted);
+  currentEncrypted.encrypted = encrypted;
   const suppressUpdate = useRef(false);
   const editor = useEditor({
     extensions: [Document, Paragraph, Text],
@@ -118,17 +122,23 @@ function Editor() {
       if (encrypted !== currentEncrypted.current) {
         setEncrypted(currentEncrypted.current);
       }
-    }, 500);
+    }, 3000);
     return () => clearTimeout(timeout);
   }, [pending]);
   return (
     <div id="editor">
-      <EditorContent editor={editor} />
+      <EditorContent
+        editor={editor}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+      />
     </div>
   );
 }
 
-function EntryList() {
+function EntryList({ currentEncrypted }) {
   const { udata, setUdata } = useContext(Udata);
   const { encrypted, setEncrypted } = useContext(EncText);
   const { currentNum, setCurrentNum } = useContext(CurrentNum);
@@ -150,6 +160,11 @@ function EntryList() {
           <button
             disabled={key === currentNum}
             onClick={() => {
+              if (!!currentNum) {
+                setUdata((prev) => {
+                  return { ...prev, [currentNum]: currentEncrypted.current };
+                });
+              }
               setCurrentNum(key);
               setEncrypted(udata[key]);
             }}
@@ -162,6 +177,11 @@ function EntryList() {
         <button
           onClick={(prev) => {
             const keyNum = String(Object.keys(udata).length);
+            if (!!currentNum) {
+              setUdata((prev) => {
+                return { ...prev, [currentNum]: currentEncrypted.current };
+              });
+            }
             setCurrentNum(keyNum);
             setEncrypted(udata[keyNum]);
             setUdata((prev) => {
