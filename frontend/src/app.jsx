@@ -1,4 +1,5 @@
 import React from "react";
+import $ from "jquery";
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import "/styles/buttons.css";
@@ -13,6 +14,16 @@ const KeyCheck = createContext();
 const Udata = createContext();
 const EncText = createContext();
 const CurrentNum = createContext();
+const SyncTrigger = createContext();
+
+function SyncTriggerProvider({ children }) {
+  const [syncTrigger, setSyncTrigger] = useState(false);
+  return (
+    <SyncTrigger.Provider value={{ syncTrigger, setSyncTrigger }}>
+      {children}
+    </SyncTrigger.Provider>
+  );
+}
 
 function CurrentKeyProvider({ children }) {
   const [enckey, setEnckey] = useState("");
@@ -142,6 +153,7 @@ function EntryList({ currentEncrypted }) {
   const { udata, setUdata } = useContext(Udata);
   const { encrypted, setEncrypted } = useContext(EncText);
   const { currentNum, setCurrentNum } = useContext(CurrentNum);
+  const { syncTrigger } = useContext(SyncTrigger);
   const keys = Object.keys(udata).filter((k) => /^\d+$/.test(k));
   useEffect(
     (prev) => {
@@ -152,6 +164,16 @@ function EntryList({ currentEncrypted }) {
       }
     },
     [encrypted],
+  );
+  useEffect(
+    (prev) => {
+      if (!!currentNum) {
+        setUdata((prev) => {
+          return { ...prev, [currentNum]: currentEncrypted.current };
+        });
+      }
+    },
+    [syncTrigger],
   );
   return (
     <ul id="entrylist">
@@ -197,12 +219,89 @@ function EntryList({ currentEncrypted }) {
 }
 
 function Write() {
+  const { syncTrigger, setSyncTrigger } = useContext(SyncTrigger);
+  const { udata } = useContext(Udata);
+  async function getToken(e) {
+    const data = new FormData(e.target);
+    const uid = utils.tth16(data.get("username"));
+    const secretTalks = await Promise.all([
+      $.ajax({
+        url: "/void/regilo",
+        method: "GET",
+        headers: {
+          Authorization: uid[1],
+        },
+        data: {
+          intent: "write",
+        },
+      }),
+      argon2.hash({
+        pass: data.get("password"),
+        salt: uid[0],
+        time: 5,
+        mem: 65536,
+        parallelism: 1,
+        hashLen: 24,
+        type: argon2.ArgonType.Argon2id,
+      }),
+    ]);
+    console.log("Regilo Passed!");
+    const salt = utils.fromB64(secretTalks[0].salt);
+    const nonce = utils.fromB64(secretTalks[0].nonce);
+    const apikeyh = await argon2.hash({
+      pass: secretTalks[1].hash,
+      salt: salt,
+      time: 5,
+      mem: 65536,
+      parallelism: 1,
+      hashLen: 32,
+      type: argon2.ArgonType.Argon2id,
+    });
+    const hmac = utils.mac(apikeyh.hash, nonce);
+    const hmacB64 = utils.toB64(hmac);
+    const loginResponse = await $.ajax({
+      url: "/void/gin",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        hmac: hmacB64,
+        nonce: secretTalks[0].nonce,
+      }),
+    });
+    const token = loginResponse.token;
+    sessionStorage.setItem("write", token);
+  }
+  async function submit(e) {
+    setSyncTrigger(true);
+    await getToken(e);
+    const packageSent = JSON.stringify(udata);
+    await $.ajax({
+      url: "/void/write",
+      method: "POST",
+      contentType: "application/json",
+      headers: {
+        Authorization: sessionStorage.write,
+      },
+      data: JSON.stringify({ udata: packageSent }),
+    });
+    setSyncTrigger(false);
+  }
   return (
-    <form id="write">
-      <input id="uid" placeholder="Username" />
-      <input id="pwd" type="password" placeholder="Password" />
-      <button id="sync">
-        <span> Sync </span>
+    <form
+      id="write"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        try {
+          await submit(e);
+        } catch (err) {
+          console.log(err);
+        }
+      }}
+    >
+      <input id="uid" name="username" placeholder="Username" />
+      <input id="pwd" name="password" type="password" placeholder="Password" />
+      <button disabled={!!syncTrigger} id="sync" type="submit">
+        <span> Sync to Server </span>
       </button>
     </form>
   );
@@ -213,17 +312,19 @@ function App({ mainObj }) {
   return (
     <Udata.Provider value={{ udata, setUdata }}>
       <div id="app">
-        <CurrentKeyProvider>
-          <EncKeyInput keyHash={mainObj.enckeyh} />
-          <KeyError />
-          <div id="mainBoard">
-            <EncTextProvider>
-              <Editor />
-              <EntryList />
-            </EncTextProvider>
-          </div>
-        </CurrentKeyProvider>
-        <Write />
+        <SyncTriggerProvider>
+          <CurrentKeyProvider>
+            <EncKeyInput keyHash={mainObj.enckeyh} />
+            <KeyError />
+            <div id="mainBoard">
+              <EncTextProvider>
+                <Editor />
+                <EntryList />
+              </EncTextProvider>
+            </div>
+          </CurrentKeyProvider>
+          <Write />
+        </SyncTriggerProvider>
       </div>
     </Udata.Provider>
   );

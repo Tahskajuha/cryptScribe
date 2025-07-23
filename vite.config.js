@@ -13,7 +13,6 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        auth: resolve(__dirname, "frontend/auth.html"),
         app: resolve(__dirname, "frontend/app.html"),
         gate: resolve(__dirname, "frontend/index.html"),
       },

@@ -2,9 +2,9 @@
   "name": "WJ",
   "version": "0.1.0",
   "description": "Web Journal App",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
-    "dev": "concurrently 'vite' 'nodemon /index.js'"
+    "dev": "concurrently 'vite' 'nodemon /server/index.js'"
   },
   "keywords": [],
   "author": "Tahskajuha",

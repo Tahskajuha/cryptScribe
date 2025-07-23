@@ -7,6 +7,8 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import { writeFile } from "fs/promises";
+import { readFile } from "fs/promises";
 
 const db = new pg.Pool({
   user: "webapp",
@@ -95,19 +97,21 @@ async function nonceCleaner() {
           "SELECT * FROM nonces WHERE expires_at < $1",
           [now],
         );
-        for (const { uid } of expired.rows) {
+        for (const { uid, intent } of expired.rows) {
           await client.query("DELETE FROM nonces WHERE uid = $1", [uid]);
-          const authRes = await client.query(
-            "SELECT apikeyh FROM cred_auth WHERE uid = $1",
-            [uid],
-          );
-          if (authRes.rowCount > 0) {
-            const placeholderkey = authRes.rows[0].apikeyh;
-            await client.query("DELETE FROM cred_auth WHERE uid = $1", [uid]);
-            await client.query(
-              "UPDATE placeholders SET ready = true WHERE placeholderkey = $1",
-              [placeholderkey],
+          if (intent === "register") {
+            const authRes = await client.query(
+              "SELECT apikeyh FROM cred_auth WHERE uid = $1",
+              [uid],
             );
+            if (authRes.rowCount > 0) {
+              const placeholderkey = authRes.rows[0].apikeyh;
+              await client.query("DELETE FROM cred_auth WHERE uid = $1", [uid]);
+              await client.query(
+                "UPDATE placeholders SET ready = true WHERE placeholderkey = $1",
+                [placeholderkey],
+              );
+            }
           }
         }
       });
@@ -163,21 +167,47 @@ app.get("/void", async (req, res) => {
   const token = req.get("Authorization");
   try {
     const decoded = jwt.verify(token, process.env.READ);
-    return res.status(200).json({ enckeyh: decoded.sub });
+    const userData = await readFile(
+      `${_dirname}/userData/${decoded.sub}`,
+      "utf8",
+    );
+    return res.status(200).json(JSON.parse(userData));
   } catch (err) {
     switch (err.name) {
       case "TokenExpiredError":
       case "JsonWebTokenError":
       case "NotBeforeError":
-        console.log("Token Expired");
         return res.sendStatus(401);
       default:
+        console.log(err);
         return res.sendStatus(500);
     }
   }
 });
 
-app.post("/void/write", async (req, res) => {});
+app.post("/void/write", async (req, res) => {
+  const token = req.get("Authorization");
+  try {
+    const decoded = jwt.verify(token, process.env.WRITE);
+    await writeFile(
+      `${_dirname}/userData/${decoded.sub}`,
+      req.body.udata,
+      "utf8",
+    );
+    return res.status(200).end();
+  } catch (err) {
+    switch (err.name) {
+      case "TokenExpiredError":
+      case "JsonWebTokenError":
+      case "NotBeforeError":
+        console.log(err);
+        return res.sendStatus(401);
+      default:
+        console.log(err);
+        return res.sendStatus(500);
+    }
+  }
+});
 
 app.post("/void/pwdreset", async (req, res) => {});
 
@@ -195,12 +225,12 @@ app.get("/void/regilo", async (req, res) => {
     } else if (intent === "login" || intent === "write") {
       challengeID = qres.rowCount === 1 ? 2 : 0;
     } else {
-      return res.status(401);
+      return res.status(401).end();
     }
 
     switch (challengeID) {
       case 0:
-        return res.status(402);
+        return res.status(402).end();
 
       case 1:
         let randomVals = await Promise.all([genRandom(), genRandom()]);
@@ -264,7 +294,7 @@ app.post("/void/gin", async (req, res) => {
 	USING cred_auth
 	WHERE nonces.uid = cred_auth.uid
 	AND nonces.nonce = $1
-	AND nonces.intent = 'login'
+	AND (nonces.intent = 'login' OR nonces.intent = 'write')
 	AND nonces.expires_at > $2
 	RETURNING nonces.*, cred_auth.*`,
           [nonce, now],
@@ -296,10 +326,10 @@ app.post("/void/gin", async (req, res) => {
         );
         return res.status(200).json({ token: token });
       } else {
-        return res.status(402);
+        return res.status(402).end();
       }
     } else if (checkReq[0].rowCount === 0) {
-      return res.status(402);
+      return res.status(402).end();
     } else {
       throw new Error(
         "Weird value returned from login query: \n" +
@@ -334,6 +364,12 @@ app.post("/void/ster", async (req, res) => {
     });
 
     if (checkReq.rowCount === 1) {
+      const userInit = { enckeyh: enckeyh };
+      await writeFile(
+        `${_dirname}/userData/${enckeyh}`,
+        JSON.stringify(userInit),
+        "utf8",
+      );
       await runTransaction(async (client) => {
         const placeholderRes = await client.query(
           "SELECT apikeyh FROM cred_auth WHERE uid = $1",
@@ -363,7 +399,7 @@ app.post("/void/ster", async (req, res) => {
       );
       return res.status(201).json({ token: token });
     } else if (checkReq.rowCount === 0) {
-      return res.status(402);
+      return res.status(402).end;
     } else {
       throw new Error(
         "Weird value returned from registration query: \n" +

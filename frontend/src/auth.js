@@ -9,8 +9,8 @@ $("#login").on("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
     $("#content").addClass("hidden");
-    let uid = utils.tth16(data.get("username"));
-    let secretTalks = await Promise.all([
+    const uid = utils.tth16(data.get("username"));
+    const secretTalks = await Promise.all([
       $.ajax({
         url: "/void/regilo",
         method: "GET",
@@ -31,8 +31,8 @@ $("#login").on("submit", async (e) => {
         type: argon2.ArgonType.Argon2id,
       }),
     ]);
-    let salt = utils.fromB64(secretTalks[0].salt);
-    let nonce = utils.fromB64(secretTalks[0].nonce);
+    const salt = utils.fromB64(secretTalks[0].salt);
+    const nonce = utils.fromB64(secretTalks[0].nonce);
     const apikeyh = await argon2.hash({
       pass: secretTalks[1].hash,
       salt: salt,
@@ -54,7 +54,7 @@ $("#login").on("submit", async (e) => {
       }),
     });
     const token = loginResponse.token;
-    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("read", token);
     await utils.animations.pageLeave();
     window.location.href = "/app.html";
   } catch (err) {
@@ -157,7 +157,7 @@ $("#register").on("submit", async (e) => {
       }),
     });
     const token = regResponse.token;
-    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("read", token);
     $("#keyConfirmButton").prop("disabled", false);
     $("#keyConfirmButton").on("click", async () => {
       $("#secret").addClass("hidden");

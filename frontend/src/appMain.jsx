@@ -11,7 +11,7 @@ const [, , udata] = await Promise.all([
     url: "/void",
     method: "GET",
     headers: {
-      Authorization: sessionStorage.token,
+      Authorization: sessionStorage.read,
     },
     data: {
       intent: "read",
@@ -21,10 +21,10 @@ const [, , udata] = await Promise.all([
         alert(
           "Sorry about that! Looks like the server is facing some issues. Please try again later.",
         );
-        window.location.href = "/auth.html";
+        window.location.href = "/index.html";
       } else if (xhr.status === 401) {
         console.log("Token expired");
-        window.location.href = "/auth.html";
+        window.location.href = "/index.html";
       } else {
         console.log(error);
       }
