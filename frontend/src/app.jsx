@@ -221,6 +221,7 @@ function EntryList({ currentEncrypted }) {
 function Write() {
   const { syncTrigger, setSyncTrigger } = useContext(SyncTrigger);
   const { udata } = useContext(Udata);
+  const [invalid, setInvalid] = useState(false);
   async function getToken(e) {
     const data = new FormData(e.target);
     const uid = utils.tth16(data.get("username"));
@@ -284,26 +285,56 @@ function Write() {
       },
       data: JSON.stringify({ udata: packageSent }),
     });
+    if (invalid) {
+      setInvalid(false);
+    }
     setSyncTrigger(false);
   }
   return (
-    <form
-      id="write"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        try {
-          await submit(e);
-        } catch (err) {
-          console.log(err);
-        }
-      }}
-    >
-      <input id="uid" name="username" placeholder="Username" />
-      <input id="pwd" name="password" type="password" placeholder="Password" />
-      <button disabled={!!syncTrigger} id="sync" type="submit">
-        <span> Sync to Server </span>
-      </button>
-    </form>
+    <div id="writeDiv">
+      <form
+        id="write"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await submit(e);
+          } catch (err) {
+            if (err.status === 402 || err.status === 401) {
+              setInvalid(true);
+            } else if (err.status === 500) {
+              alert(
+                "The server might be facing some issues. It is recommended to save your changes locally until this is resolved.",
+              );
+            } else {
+              console.log(err);
+            }
+            setSyncTrigger(false);
+          }
+        }}
+      >
+        <input
+          id="uid"
+          max="254"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+          name="username"
+          placeholder="Username"
+        />
+        <input
+          id="pwd"
+          name="password"
+          type="password"
+          placeholder="Password"
+        />
+        <button disabled={!!syncTrigger} id="sync" type="submit">
+          <span> Sync to Server </span>
+        </button>
+      </form>
+      <h4 className={invalid ? "" : "hidden"}>Invalid Credentials!</h4>
+    </div>
   );
 }
 

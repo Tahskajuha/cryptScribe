@@ -1,5 +1,5 @@
 #content {
-  height: 90%;
+  height: 95%;
 }
 #app {
   display: flex;
@@ -117,14 +117,17 @@ input::placeholder {
   background-color: #222;
   transform: scale(0.95);
 }
+#writeDiv {
+  width: 90%;
+  margin: 10px;
+  flex: 3;
+}
 #write {
   justify-content: center;
   align-items: center;
   display: flex;
   flex-direction: row;
-  width: 90%;
-  flex: 3;
-  margin: 10px;
+  width: 100%;
 }
 #uid {
   flex: 4;
