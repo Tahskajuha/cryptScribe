@@ -31,8 +31,6 @@
 
 ## **Current Development Roadmap**
 
-### **Completed**
-
 - [x] Set up project dependencies and structure.
 - [x] Challenge endpoint for initiating auth.
 - [x] Login/Register/Write response handling.
@@ -44,22 +42,18 @@
 - [x] JWT-based token issuance with short lifetimes and minimal payload.
 - [x] Utilities library for the frontend.
 - [x] Separate signing keys for read and write tokens.
-
-### **TO-DO**
-
+- [x] Build a minimal markdown editor using react with a sync button and a key-input.
+- [x] Implement endpoints for read (GET via login/read token), write (POST with write token).
+- [ ] Implement reset password and reset encryption key endpoints.
 - [ ] Finish CLI auth flow.
 - [ ] Implement strict rate-limiting on all routes.
-- [ ] Build a minimal markdown editor using react with a sync button and a key-input.
-- [ ] Implement endpoints for read (GET via login/read token), write (POST with write token) and password reset.
 - [ ] CLI interface for reading/writing securely.
 - [ ] Prepare for .onion-compatible backend deployment (for both local and remote use).
 - [ ] Set up Vite build for Electron frontend.
 - [ ] Set up esbuild for CLI tool bundling.
 - [ ] Create a 'Usage' section in the README for both local and remote deployment instructions.
 - [ ] Add unified logging layer in the server.
-- [ ] UI for key regeneration (with warning + optional export)
-- [ ] Server-side endpoint for bulk-deletion of user-owned entries (triggered at key regeneration or manually).
-- [ ] Database update on key regen or password reset.
+- [ ] UI for key regeneration (with warning + optional export).
 
 ---
 
@@ -68,10 +62,12 @@
 This app is built around a zero-plaintext, zero-trust model. The backend is stateless, never receives or stores any plaintext user identifiers, passwords or encryption keys.
 
 - **Key Derivation Chain:**
+
   ```
   APIKEY = Argon2id(password, salt=blake2b(uuid))
   APIKEY_HASH = Argon2id(APIKEY, salt=per_user_random_salt_from_server
   ```
+
   A total of **10 salt rounds** are used across UUID + password -> APIKEY -> APIKEY_HASH, enforcing resilience against brute-force attacks.
 
 - **Zero-Knowledge UID Verification:**
@@ -84,15 +80,18 @@ This app is built around a zero-plaintext, zero-trust model. The backend is stat
 
 - **Login via HMAC:**
   The client proves knowledge of APIKEY_HASH via:
+
   ```
   HMAC = MAC(APIKEY_HASH, nonce)
   ```
 
 - **Registration Flow (Key Separation):**
   On registration, a strong non-derivable encryption key (ENCKEY) is generated client-side and never sent over the network. Only ENCKEYH is sent alongside APIKEYH where:
+
   ```
   ENCKEYH = blake2b(ENCKEY)
   ```
+
   The encryption key never touches the backend -- ever.
 
 - **Encrypted Data Association:**

@@ -1,10 +1,9 @@
 {
-  "name": "WJ",
-  "version": "0.1.0",
-  "description": "Web Journal App",
-  "main": "server/index.js",
+  "name": "Frontend",
+  "version": "1.0.0",
+  "description": "cryptScribe frontend and cli dependencies",
   "scripts": {
-    "dev": "concurrently 'vite' 'nodemon /server/index.js'"
+    "dev": "vite"
   },
   "keywords": [],
   "author": "Tahskajuha",
@@ -15,22 +14,17 @@
     "@tiptap/extension-paragraph": "^3.0.7",
     "@tiptap/extension-text": "^3.0.7",
     "@tiptap/react": "^3.0.7",
-    "@vitejs/plugin-react": "^4.6.0",
     "argon2-browser": "^1.18.0",
-    "concurrently": "^9.2.0",
-    "dotenv": "^17.0.1",
-    "electron": "^37.2.1",
-    "esbuild": "^0.25.6",
-    "express": "^5.1.0",
-    "express-csp-header": "^6.1.0",
     "jquery": "^3.7.1",
-    "jsonwebtoken": "^9.0.2",
     "libsodium-wrappers": "^0.7.15",
     "markdown-it": "^14.1.0",
-    "nodemon": "^3.1.10",
-    "pg": "^8.16.2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.1",
+    "@vitejs/plugin-react": "^4.6.0",
+    "esbuild": "^0.25.6",
     "vite": "^7.0.0"
   }
 }
