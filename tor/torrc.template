@@ -1,0 +1,2 @@
+HiddenServiceDir ${HS_DIR}
+HiddenServicePort ${HS_PORTEXT} ${HS_HOST}:${HS_PORT}

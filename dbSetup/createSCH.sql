@@ -33,3 +33,4 @@ CREATE TABLE journal.placeholders (
 GRANT USAGE, CREATE ON SCHEMA journal TO webapp;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA journal TO webapp;
 COMMIT;
+ALTER ROLE webapp SET search_path TO journal;

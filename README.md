@@ -44,11 +44,11 @@
 - [x] Separate signing keys for read and write tokens.
 - [x] Build a minimal markdown editor using react with a sync button and a key-input.
 - [x] Implement endpoints for read (GET via login/read token), write (POST with write token).
+- [x] Prepare for .onion-compatible backend deployment (for both local and remote use).
 - [ ] Implement reset password and reset encryption key endpoints.
 - [ ] Finish CLI auth flow.
 - [ ] Implement strict rate-limiting on all routes.
 - [ ] CLI interface for reading/writing securely.
-- [ ] Prepare for .onion-compatible backend deployment (for both local and remote use).
 - [ ] Set up Vite build for Electron frontend.
 - [ ] Set up esbuild for CLI tool bundling.
 - [ ] Create a 'Usage' section in the README for both local and remote deployment instructions.

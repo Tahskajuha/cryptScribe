@@ -1,0 +1,50 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: backend
+    depends_on:
+      - db
+    volumes:
+      - userData:/app/userData
+    command: ["sh", "waitFor.sh", "db", "5432", "node", "index.js"]
+    networks:
+      dbnet:
+      tornet:
+
+  db:
+    build:
+      context: ./dbSetup
+      dockerfile: Dockerfile
+    container_name: db
+    volumes:
+      - dbData:/var/lib/postgresql/data
+    networks:
+      dbnet:
+
+  tor:
+    image: leplusorg/tor:latest
+    container_name: tor
+    depends_on:
+      - backend
+    environment:
+      - SHELL_FORMAT_EXTRA=$${HS_DIR},$${HS_HOST},$${HS_PORT},$${HS_PORTEXT}
+      - HS_DIR=/var/lib/tor/.tor/
+      - HS_PORTEXT=80
+      - HS_HOST=backend
+      - HS_PORT=3000
+    volumes:
+      - ./tor/torrc.template:/etc/tor/torrc.template
+      - torkeys:/var/lib/tor/
+    networks:
+      tornet:
+
+volumes:
+  userData:
+  dbData:
+  torkeys:
+
+networks:
+  tornet:
+  dbnet:

@@ -12,7 +12,8 @@ import { readFile } from "fs/promises";
 
 const db = new pg.Pool({
   user: "webapp",
-  host: "localhost",
+  host: "db",
+  password: "IDunnoThisIsLocalUse",
   database: "journal_db",
   port: 5432,
   max: 5,
@@ -57,7 +58,7 @@ async function shutdown() {
   console.log("Server is shutting down...");
   try {
     await runTransaction(async (client) => {
-      await client.query("DELETE FROM placeholders");
+      await client.query("DELETE FROM journal.placeholders");
       await client.query(
         "SELECT setval(pg_get_serial_sequence('placeholders', 'index'), 1, false)",
       );
@@ -414,6 +415,7 @@ app.post("/void/ster", async (req, res) => {
 
 //================================================<Server Start and End>==============================================
 app.listen(webPort, async () => {
+  await db.query("SET search_path TO journal");
   let placeholder = [];
   for (let i = 0; i < 30; i++) {
     let newph = await genRandom();
