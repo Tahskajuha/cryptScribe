@@ -6,9 +6,6 @@
   "author": "Tahskajuha",
   "type": "module",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "dependencies": {
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
@@ -16,8 +13,5 @@
     "jsonwebtoken": "^9.0.2",
     "libsodium-wrappers": "^0.7.15",
     "pg": "^8.16.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
   }
 }

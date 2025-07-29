@@ -8,6 +8,9 @@ import utils from "/src/utils.js";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
+import { Bold as BaseBold } from "@tiptap/extension-bold";
+import { Code as BaseCode } from "@tiptap/extension-code";
+import { markInputRule } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 
 const KeyCheck = createContext();
@@ -15,6 +18,58 @@ const Udata = createContext();
 const EncText = createContext();
 const CurrentNum = createContext();
 const SyncTrigger = createContext();
+
+function withBackspaceUnmark(markName, unsetCommand) {
+  return {
+    Backspace: ({ editor }) => {
+      const { state } = editor;
+      const { empty, $from } = state.selection;
+
+      if (!empty) return false;
+
+      const nodeBefore = $from.nodeBefore;
+      const parent = $from.parent;
+
+      const isEmpty = parent.isTextblock && parent.content.size === 0;
+      const isActive = editor.isActive(markName);
+
+      if (isEmpty && isActive) {
+        editor.commands[unsetCommand]();
+        return true;
+      }
+
+      return false;
+    },
+  };
+}
+
+const Bold = BaseBold.extend({
+  addInputRules() {
+    return [
+      markInputRule({
+        find: /\*\*(.+?)\*\*$/,
+        type: this.type,
+      }),
+    ];
+  },
+  addKeyboardShortcuts() {
+    return withBackspaceUnmark("bold", "unsetBold");
+  },
+});
+
+const Code = BaseCode.extend({
+  addInputRules() {
+    return [
+      markInputRule({
+        find: /\`(.+?)\`$/,
+        type: this.type,
+      }),
+    ];
+  },
+  addKeyboardShortcuts() {
+    return withBackspaceUnmark("code", "unsetCode");
+  },
+});
 
 function SyncTriggerProvider({ children }) {
   const [syncTrigger, setSyncTrigger] = useState(false);
@@ -89,8 +144,8 @@ function Editor({ currentEncrypted }) {
   currentEncrypted.encrypted = encrypted;
   const suppressUpdate = useRef(false);
   const editor = useEditor({
-    extensions: [Document, Paragraph, Text],
     content: "",
+    extensions: [Document, Paragraph, Text, Bold, Code],
     editable: false,
     onUpdate({ editor }) {
       if (suppressUpdate.current) {
@@ -315,10 +370,10 @@ function Write() {
         <input
           id="uid"
           max="254"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
           required
           name="username"
           placeholder="Username"

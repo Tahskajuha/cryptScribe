@@ -8,7 +8,7 @@ const [, , udata] = await Promise.all([
   utils.domReady(),
   utils.sodiumReady,
   $.ajax({
-    url: "/void",
+    url: "/void/read",
     method: "GET",
     headers: {
       Authorization: sessionStorage.read,

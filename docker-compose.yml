@@ -9,6 +9,7 @@ services:
     volumes:
       - userData:/app/userData
     command: ["sh", "waitFor.sh", "db", "5432", "node", "index.js"]
+    restart: unless-stopped
     networks:
       dbnet:
       tornet:
@@ -20,6 +21,7 @@ services:
     container_name: db
     volumes:
       - dbData:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       dbnet:
 
@@ -34,6 +36,7 @@ services:
       - HS_PORTEXT=80
       - HS_HOST=backend
       - HS_PORT=3000
+    restart: unless-stopped
     volumes:
       - ./tor/torrc.template:/etc/tor/torrc.template
       - torkeys:/var/lib/tor/

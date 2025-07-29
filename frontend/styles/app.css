@@ -70,6 +70,9 @@ input::placeholder {
   line-height: 1.2;
   padding-left: 15px;
 }
+#editor > div > .ProseMirror code {
+  background-color: #2e2e2e;
+}
 #editor > div > .ProseMirror:focus {
   outline: none;
   box-shadow: none;

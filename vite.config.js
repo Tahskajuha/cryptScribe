@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { SocksProxyAgent } from "socks-proxy-agent";
-import { testEnv } from "./test100.js";
+import testEnv from "./test100.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +28,7 @@ export default defineConfig({
         target: testEnv,
         changeOrigin: true,
         secure: false,
-        agent: new SocksProxyAgent("socks://127.0.0.1:9050"),
+        agent: new SocksProxyAgent("socks5h://127.0.0.1:9050"),
       },
     },
   },

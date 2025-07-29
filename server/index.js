@@ -7,8 +7,7 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import { writeFile } from "fs/promises";
-import { readFile } from "fs/promises";
+import { writeFile, readFile, unlink } from "fs/promises";
 
 const db = new pg.Pool({
   user: "webapp",
@@ -25,7 +24,6 @@ const app = express();
 const webPort = 3000;
 const _dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.json());
-app.use(express.static(_dirname + "/public"));
 app.use(
   expressCspHeader({
     directives: {
@@ -164,7 +162,12 @@ async function getPlaceholder(index) {
 }
 
 //=====================================================<Routes>=======================================================
-app.get("/void", async (req, res) => {
+app.get("/void", (req, res) => {
+  console.log("Hit /void");
+  return res.sendStatus(200);
+});
+
+app.get("/void/read", async (req, res) => {
   const token = req.get("Authorization");
   try {
     const decoded = jwt.verify(token, process.env.READ);
@@ -212,6 +215,43 @@ app.post("/void/write", async (req, res) => {
 
 app.post("/void/pwdreset", async (req, res) => {});
 
+app.post("/void/encreset", async (req, res) => {
+  const token = req.get("Authorization");
+  const enckeyh = req.body.enckeyh;
+  try {
+    const decoded = jwt.verify(token, process.env.RESETKEY);
+    const filePath = `${_dirname}/userData/${decoded.sub}`;
+    const userData = await readFile(filePath, "utf8");
+    await unlink(filePath);
+    await runTransaction(async (client) => {
+      await client.query("DELETE FROM entries WHERE enckeyh = $1", [
+        decoded.sub,
+      ]);
+      await client.query(
+        "UPDATE api_auth SET enckeyh = $2 WHERE enckeyh = $1",
+        [decoded.sub, enckeyh],
+      );
+    });
+    const userInit = { enckeyh: enckeyh };
+    await writeFile(
+      `${_dirname}/userData/${enckeyh}`,
+      JSON.stringify(userInit),
+      "utf8",
+    );
+    return res.status(200).json(JSON.parse(userData));
+  } catch (err) {
+    switch (err.name) {
+      case "TokenExpiredError":
+      case "JsonWebTokenError":
+      case "NotBeforeError":
+        return res.sendStatus(401);
+      default:
+        console.log(err);
+        return res.sendStatus(500);
+    }
+  }
+});
+
 app.get("/void/regilo", async (req, res) => {
   const uid = req.get("Authorization");
   const intent = req.query.intent;
@@ -223,7 +263,7 @@ app.get("/void/regilo", async (req, res) => {
     let challengeID = -1;
     if (intent === "register") {
       challengeID = qres.rowCount === 0 ? 1 : 0;
-    } else if (intent === "login" || intent === "write") {
+    } else if (intent === "login" || intent === "write" || intent === "reset") {
       challengeID = qres.rowCount === 1 ? 2 : 0;
     } else {
       return res.status(401).end();
@@ -320,10 +360,13 @@ app.post("/void/gin", async (req, res) => {
         const token = jwt.sign(
           {
             sub: keyMap.rows[0].enckeyh,
-            iat: Date.now(),
           },
-          result.intent === "write" ? process.env.WRITE : process.env.READ,
-          { algorithm: "HS256", expiresIn: 600 },
+          result.intent === "reset"
+            ? process.env.RESETKEY
+            : result.intent === "write"
+              ? process.env.WRITE
+              : process.env.READ,
+          { algorithm: "HS256", expiresIn: "10m" },
         );
         return res.status(200).json({ token: token });
       } else {
@@ -393,10 +436,9 @@ app.post("/void/ster", async (req, res) => {
       const token = jwt.sign(
         {
           sub: enckeyh,
-          iat: Date.now(),
         },
         process.env.READ,
-        { algorithm: "HS256", expiresIn: 600 },
+        { algorithm: "HS256", expiresIn: "10m" },
       );
       return res.status(201).json({ token: token });
     } else if (checkReq.rowCount === 0) {
@@ -414,7 +456,7 @@ app.post("/void/ster", async (req, res) => {
 });
 
 //================================================<Server Start and End>==============================================
-app.listen(webPort, async () => {
+app.listen(webPort, "0.0.0.0", async () => {
   await db.query("SET search_path TO journal");
   let placeholder = [];
   for (let i = 0; i < 30; i++) {
@@ -429,6 +471,7 @@ app.listen(webPort, async () => {
   });
   process.env.READ = (await genRandom())[1];
   process.env.WRITE = (await genRandom())[1];
+  process.env.RESETKEY = (await genRandom())[1];
   await nonceCleaner();
   console.log(`Active on port ${webPort}`);
 });
