@@ -4,72 +4,40 @@ import { createContext, useContext, useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import "/styles/buttons.css";
 import "/styles/app.css";
+import "katex/dist/katex.min.css";
 import utils from "/src/utils.js";
-import Document from "@tiptap/extension-document";
-import Paragraph from "@tiptap/extension-paragraph";
-import Text from "@tiptap/extension-text";
-import { Bold as BaseBold } from "@tiptap/extension-bold";
-import { Code as BaseCode } from "@tiptap/extension-code";
-import { markInputRule } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
+import {
+  Document,
+  Text,
+  Paragraph,
+  Bold,
+  Code,
+  CodeBlock,
+  Math,
+  Italic,
+  Strike,
+  Subscript,
+  Superscript,
+  Underline,
+  Blockquote,
+  BulletList,
+  ListItem,
+  OrderedList,
+  Heading,
+  TextAlign,
+  HorizontalRule,
+  EscapeChar,
+  HardBreak,
+  Highlight,
+  UnsetActiveMark,
+} from "/src/editorAddons.js";
 
 const KeyCheck = createContext();
 const Udata = createContext();
 const EncText = createContext();
 const CurrentNum = createContext();
 const SyncTrigger = createContext();
-
-function withBackspaceUnmark(markName, unsetCommand) {
-  return {
-    Backspace: ({ editor }) => {
-      const { state } = editor;
-      const { empty, $from } = state.selection;
-
-      if (!empty) return false;
-
-      const nodeBefore = $from.nodeBefore;
-      const parent = $from.parent;
-
-      const isEmpty = parent.isTextblock && parent.content.size === 0;
-      const isActive = editor.isActive(markName);
-
-      if (isEmpty && isActive) {
-        editor.commands[unsetCommand]();
-        return true;
-      }
-
-      return false;
-    },
-  };
-}
-
-const Bold = BaseBold.extend({
-  addInputRules() {
-    return [
-      markInputRule({
-        find: /\*\*(.+?)\*\*$/,
-        type: this.type,
-      }),
-    ];
-  },
-  addKeyboardShortcuts() {
-    return withBackspaceUnmark("bold", "unsetBold");
-  },
-});
-
-const Code = BaseCode.extend({
-  addInputRules() {
-    return [
-      markInputRule({
-        find: /\`(.+?)\`$/,
-        type: this.type,
-      }),
-    ];
-  },
-  addKeyboardShortcuts() {
-    return withBackspaceUnmark("code", "unsetCode");
-  },
-});
 
 function SyncTriggerProvider({ children }) {
   const [syncTrigger, setSyncTrigger] = useState(false);
@@ -145,7 +113,73 @@ function Editor({ currentEncrypted }) {
   const suppressUpdate = useRef(false);
   const editor = useEditor({
     content: "",
-    extensions: [Document, Paragraph, Text, Bold, Code],
+    extensions: [
+      Document,
+      Paragraph,
+      Text,
+      Bold,
+      Code,
+      CodeBlock,
+      Italic,
+      Strike,
+      Underline,
+      Subscript,
+      Superscript,
+      Blockquote,
+      BulletList,
+      OrderedList,
+      ListItem,
+      Heading.configure({
+        levels: [1, 2, 3, 4, 5, 6],
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      HorizontalRule,
+      EscapeChar,
+      Math.configure({
+        blockOptions: {
+          onClick: (node, pos) => {
+            const newCalculation = prompt(
+              "Enter new calculation:",
+              node.attrs.latex,
+            );
+            if (newCalculation && typeof pos === "number") {
+              editor
+                .chain()
+                .setNodeSelection(pos)
+                .updateBlockMath({ latex: newCalculation })
+                .focus()
+                .run();
+            }
+          },
+        },
+        inlineOptions: {
+          onClick: (node) => {
+            const newCalculation = prompt(
+              "Enter new calculation:",
+              node.attrs.latex,
+            );
+            if (newCalculation && typeof node?.pos === "number") {
+              editor
+                .chain()
+                .setNodeSelection(node.pos)
+                .updateInlineMath({ latex: newCalculation })
+                .focus()
+                .run();
+            }
+          },
+        },
+        katexOptions: {
+          throwOnError: false,
+        },
+      }),
+      HardBreak,
+      Highlight.configure({
+        multicolor: true,
+      }),
+      UnsetActiveMark,
+    ],
     editable: false,
     onUpdate({ editor }) {
       if (suppressUpdate.current) {
@@ -165,22 +199,25 @@ function Editor({ currentEncrypted }) {
     if (editor) {
       suppressUpdate.current = true;
       editor.setEditable(!!enckey && !!currentNum);
-      editor.commands.setContent(
-        enckey
-          ? utils.decrypt(currentEncrypted.current, enckey)
-          : currentEncrypted.current,
-      );
+      const decrypted = enckey
+        ? utils.decrypt(currentEncrypted.current, enckey)
+        : currentEncrypted.current;
+      if (editor.getHTML() !== decrypted) {
+        editor.commands.setContent(decrypted);
+      }
     }
   }, [enckey, currentNum]);
   useEffect(() => {
     currentEncrypted.current = encrypted;
     setPending(currentEncrypted.current);
     if (editor) {
-      editor.commands.setContent(
-        enckey
-          ? utils.decrypt(currentEncrypted.current, enckey)
-          : currentEncrypted.current,
-      );
+      const decrypted = enckey
+        ? utils.decrypt(currentEncrypted.current, enckey)
+        : currentEncrypted.current;
+      if (editor.getHTML() !== decrypted) {
+        suppressUpdate.current = true;
+        editor.commands.setContent(decrypted);
+      }
     }
   }, [encrypted]);
   useEffect(() => {

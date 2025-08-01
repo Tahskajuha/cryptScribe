@@ -1,5 +1,6 @@
 #content {
   height: 95%;
+  width: 75%;
 }
 #app {
   display: flex;
@@ -34,10 +35,6 @@ h4 {
   width: 90%;
   font-style: italic;
 }
-input::placeholder {
-  font-style: italic;
-  letter-spacing: 2px;
-}
 #mainBoard {
   flex: 33;
   height: 75%;
@@ -48,6 +45,7 @@ input::placeholder {
 }
 #editor {
   height: 100%;
+  width: 100%;
   margin: 10px;
   margin-bottom: 0px;
   margin-left: 0px;
@@ -59,6 +57,7 @@ input::placeholder {
   height: 100%;
 }
 #editor > div > .ProseMirror {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   background-color: #1e1e1e;
@@ -69,9 +68,29 @@ input::placeholder {
   font-size: 1.2rem;
   line-height: 1.2;
   padding-left: 15px;
+  padding-right: 15px;
 }
 #editor > div > .ProseMirror code {
+  word-break: break-word;
+  overflow-x: auto;
   background-color: #2e2e2e;
+}
+#editor > div > .ProseMirror pre {
+  word-break: break-word;
+  box-sizing: border-box;
+  background-color: #2e2e2e;
+  overflow-x: hidden;
+  padding: 10px;
+  width: 100%;
+  max-width: fit-content;
+}
+#editor > div > .ProseMirror blockquote {
+  background-color: #252525;
+  border-left: 3px solid #5a5a5a;
+  padding: 0.25em 0.75em;
+  margin: 0.5em 0.5em;
+  color: #cccccc;
+  font-style: italic;
 }
 #editor > div > .ProseMirror:focus {
   outline: none;
@@ -84,6 +103,68 @@ input::placeholder {
 #editor > div > .ProseMirror[contenteditable="false"] {
   opacity: 0.75;
   pointer-events: none;
+}
+#editor > div > .ProseMirror h1,
+#editor > div > .ProseMirror h2,
+#editor > div > .ProseMirror h3,
+#editor > div > .ProseMirror h4,
+#editor > div > .ProseMirror h5,
+#editor > div > .ProseMirror h6 {
+  color: #ffffff;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  font-style: normal;
+}
+#editor > div > .ProseMirror h1 {
+  font-size: 2rem;
+  border-bottom: 2px solid #444;
+  padding-bottom: 0.3em;
+}
+#editor > div > .ProseMirror h2 {
+  font-size: 1.75rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.25em;
+}
+#editor > div > .ProseMirror h3 {
+  font-size: 1.5rem;
+}
+#editor > div > .ProseMirror h4 {
+  font-size: 1.25rem;
+}
+#editor > div > .ProseMirror h5 {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+#editor > div > .ProseMirror h6 {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #bbbbbb;
+}
+span[data-escape-char] {
+  user-select: text !important;
+}
+.katex {
+  user-select: none;
+}
+.tiptap-mathematics-render {
+  padding: 10px;
+}
+.tiptap-mathematics-render:hover {
+  background-color: #2e2e2e;
+}
+.red {
+  background-color: red;
+}
+.green {
+  background-color: green;
+}
+.blue {
+  background-color: blue;
+}
+.rgb {
+  animation: rgb-cycle 5s linear infinite;
 }
 #entrylist {
   display: block;
@@ -146,5 +227,19 @@ input::placeholder {
   #content {
     min-height: 100vh;
     min-width: 100vw;
+  }
+}
+@keyframes rgb-cycle {
+  0% {
+    background-color: red;
+  }
+  33% {
+    background-color: green;
+  }
+  66% {
+    background-color: blue;
+  }
+  100% {
+    background-color: red;
   }
 }
