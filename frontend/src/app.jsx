@@ -22,8 +22,10 @@ import {
   Underline,
   Blockquote,
   BulletList,
-  ListItem,
   OrderedList,
+  TaskList,
+  TaskItem,
+  ListItem,
   Heading,
   TextAlign,
   HorizontalRule,
@@ -128,6 +130,10 @@ function Editor({ currentEncrypted }) {
       Blockquote,
       BulletList,
       OrderedList,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
       ListItem,
       Heading.configure({
         levels: [1, 2, 3, 4, 5, 6],

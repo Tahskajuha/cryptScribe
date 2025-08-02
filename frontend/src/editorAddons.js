@@ -12,6 +12,8 @@ import { Superscript as BaseSuperscript } from "@tiptap/extension-superscript";
 import { Underline as BaseUnderline } from "@tiptap/extension-underline";
 import Blockquote from "@tiptap/extension-blockquote";
 import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 import Heading from "@tiptap/extension-heading";
 import { TextAlign as BaseTextAlign } from "@tiptap/extension-text-align";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
@@ -294,8 +296,10 @@ export {
   Underline,
   Blockquote,
   BulletList,
-  ListItem,
   OrderedList,
+  TaskList,
+  ListItem,
+  TaskItem,
   Heading,
   TextAlign,
   HorizontalRule,

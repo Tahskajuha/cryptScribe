@@ -166,6 +166,23 @@ span[data-escape-char] {
 .rgb {
   animation: rgb-cycle 5s linear infinite;
 }
+ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+ul[data-type="taskList"] > li {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+ul[data-type="taskList"] > li > label {
+  display: flex;
+  align-items: center;
+}
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
 #entrylist {
   display: block;
   margin: 10px;
