@@ -1,4 +1,5 @@
-//==================================================<Server Setup>==================================================== import express from "express";
+//==================================================<Server Setup>====================================================
+import express from "express";
 import _sodium from "libsodium-wrappers";
 import { expressCspHeader, INLINE, NONE, SELF } from "express-csp-header";
 import pg from "pg";
