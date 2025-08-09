@@ -18,8 +18,8 @@
 - **Database Normalization:**
   The backend uses a relational database normalized up to **BCNF (Boyce-Codd Normal Form)** while still making sure that queries are optimized to require at most one join, thus keeping access overhead minimal.
 
-- **Markdown Rendering:**
-  Uses **markdown-it** in the frontend to render markdown-style writing as HTML in real-time. Entries do not touch the network in decrypted state.
+- **Extended Markdown with Real-Time Inline Rendering:**
+  Uses **TipTap** in the GUI and **Markdown-it** in the CLI, both supporting a shared, markdown-based syntax to render markdown-style writing as HTML in real-time. Entries do not touch the network in decrypted form.
 
 - **Electron Frontend for Smooth Local UX:**
   The frontend runs on Electron, ensuring a responsive local experience even when connecting over privacy-preserving networks like Tor.
@@ -45,7 +45,7 @@
 - [x] Build a minimal markdown editor using react with a sync button and a key-input.
 - [x] Implement endpoints for read (GET via login/read token), write (POST with write token).
 - [x] Prepare for .onion-compatible backend deployment (for both local and remote use).
-- [ ] Implement reset password and reset encryption key endpoints.
+- [x] Implement reset password and reset encryption key endpoints.
 - [ ] Finish CLI auth flow.
 - [ ] Implement strict rate-limiting on all routes.
 - [ ] CLI interface for reading/writing securely.

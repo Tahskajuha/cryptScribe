@@ -155,13 +155,13 @@ span[data-escape-char] {
   background-color: #2e2e2e;
 }
 .red {
-  background-color: red;
+  background-color: #b03a2e;
 }
 .green {
-  background-color: green;
+  background-color: #4caf50;
 }
 .blue {
-  background-color: blue;
+  background-color: #4682b4;
 }
 .rgb {
   animation: rgb-cycle 5s linear infinite;
@@ -248,15 +248,15 @@ input[type="checkbox"] {
 }
 @keyframes rgb-cycle {
   0% {
-    background-color: red;
+    background-color: #b03a2e;
   }
   33% {
-    background-color: green;
+    background-color: #4caf50;
   }
   66% {
-    background-color: blue;
+    background-color: #4682b4;
   }
   100% {
-    background-color: red;
+    background-color: #b03a2e;
   }
 }

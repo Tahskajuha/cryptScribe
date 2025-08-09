@@ -1,27 +1,25 @@
-//==================================================<Server Setup>====================================================
-import express from "express";
+//==================================================<Server Setup>==================================================== import express from "express";
 import _sodium from "libsodium-wrappers";
 import { expressCspHeader, INLINE, NONE, SELF } from "express-csp-header";
 import pg from "pg";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
-import "dotenv/config";
 import { writeFile, readFile, unlink } from "fs/promises";
+import { Resend } from "resend";
 
 const db = new pg.Pool({
-  user: "webapp",
+  user: process.env.USER,
   host: "db",
-  password: "IDunnoThisIsLocalUse",
-  database: "journal_db",
-  port: 5432,
+  password: process.env.PWD,
+  database: process.env.NAME,
+  port: process.env.DBPORT,
   max: 5,
   idleTimeoutMillis: 3000,
   connectionTimeoutMillis: 1000,
 });
 
 const app = express();
-const webPort = 3000;
 const _dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.json());
 app.use(
@@ -35,6 +33,20 @@ app.use(
     },
   }),
 );
+
+let resend = null;
+let enablePWDReset = false;
+if (process.env.RESENDAPI && process.env.EMAILFROM) {
+  try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.EMAILFROM)) {
+      throw new Error("Invalid Email!");
+    }
+    resend = new Resend(process.env.RESENDAPI);
+    enablePWDReset = true;
+  } catch (err) {
+    console.log(err);
+  }
+}
 
 //=====================================================<Functions>====================================================
 async function runTransaction(callbackFunction) {
@@ -163,7 +175,6 @@ async function getPlaceholder(index) {
 
 //=====================================================<Routes>=======================================================
 app.get("/void", (req, res) => {
-  console.log("Hit /void");
   return res.sendStatus(200);
 });
 
@@ -213,7 +224,82 @@ app.post("/void/write", async (req, res) => {
   }
 });
 
-app.post("/void/pwdreset", async (req, res) => {});
+if (enablePWDReset) {
+  app.get("/void/reqpwdreset", async (req, res) => {
+    const uid = req.get("EmailID");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(uid)) {
+      return res.sendStatus(401);
+    }
+    const sodium = await _sodium.ready;
+    const hash = sodium.to_base64(sodium.crypto_generichash(16, uid));
+    try {
+      const qres = await db.query("SELECT * FROM cred_auth WHERE uid = $1", [
+        hash,
+      ]);
+      if (qres.rowCount !== 1) {
+        return res.sendStatus(401);
+      }
+      const token = jwt.sign(
+        {
+          sub: hash,
+        },
+        process.env.RESETKEY,
+        { algorithm: "HS256", expiresIn: "10m" },
+      );
+      const mailContent = `<p align="center"> Paste this token in your app to initiate password reset</p><pre align="center">${token}</pre>`;
+      const { data, error } = await resend.emails.send({
+        from: process.env.EMAILFROM,
+        to: [uid],
+        subject: "Password Reset Token",
+        html: mailContent,
+      });
+      if (error) {
+        throw error;
+      }
+      return res.status(200).json({ salt: qres.rows[0].salt });
+    } catch (err) {
+      console.log(err);
+      return res.sendStatus(500);
+    }
+  });
+  app.post("/void/pwdreset", async (req, res) => {
+    const token = req.get("Authorization");
+    const apikeyh = req.body.apikeyh;
+    try {
+      const decoded = jwt.verify(token, process.env.RESETKEY);
+      const uid = decoded.sub;
+      await runTransaction(async (client) => {
+        const qres = await client.query(
+          "SELECT * FROM cred_auth WHERE uid = $1",
+          [uid],
+        );
+        if (qres.rowCount !== 1) {
+          return res.sendStatus(401);
+        }
+        await client.query(
+          "UPDATE api_auth SET apikeyh = $1 WHERE apikeyh = $2",
+          [apikeyh, qres.rows[0].apikeyh],
+        );
+        await client.query("UPDATE cred_auth SET apikeyh = $1 WHERE uid = $2", [
+          apikeyh,
+          uid,
+        ]);
+      });
+      return res.sendStatus(200);
+    } catch (err) {
+      switch (err.name) {
+        case "TokenExpiredError":
+        case "JsonWebTokenError":
+        case "NotBeforeError":
+          console.log(err);
+          return res.sendStatus(401);
+        default:
+          console.log(err);
+          return res.sendStatus(500);
+      }
+    }
+  });
+}
 
 app.post("/void/encreset", async (req, res) => {
   const token = req.get("Authorization");
@@ -456,7 +542,7 @@ app.post("/void/ster", async (req, res) => {
 });
 
 //================================================<Server Start and End>==============================================
-app.listen(webPort, "0.0.0.0", async () => {
+app.listen(process.env.PORT, "0.0.0.0", async () => {
   await db.query("SET search_path TO journal");
   let placeholder = [];
   for (let i = 0; i < 30; i++) {

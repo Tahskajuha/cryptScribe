@@ -4,3 +4,4 @@ test*
 torkeys/
 userData/
 dbData/
+.env

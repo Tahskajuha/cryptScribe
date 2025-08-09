@@ -200,6 +200,7 @@ function Editor({ currentEncrypted }) {
         }
       }
     },
+    ssr: false,
   });
   useEffect(() => {
     if (editor) {

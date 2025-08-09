@@ -1,5 +1,12 @@
 services:
   backend:
+    environment:
+      PORT: ${BACKPORT}
+      USER: ${DBUSERNAME}
+      PWD: ${DBPWD}
+      NAME: ${DBNAME}
+      DBPORT: ${DBPORT}
+      RESENDAPI: ${RESENDAPI}
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -8,7 +15,8 @@ services:
       - db
     volumes:
       - userData:/app/userData
-    command: ["sh", "waitFor.sh", "db", "5432", "node", "index.js"]
+    command: >
+      sh -c "sh waitFor.sh db ${DBPORT} node index.js"
     restart: unless-stopped
     networks:
       dbnet:
@@ -18,9 +26,15 @@ services:
     build:
       context: ./dbSetup
       dockerfile: Dockerfile
+      args:
+        USER: ${DBUSERNAME}
+        PWD: ${DBPWD}
+        NAME: ${DBNAME}
+        DBPORT: ${DBPORT}
     container_name: db
     volumes:
       - dbData:/var/lib/postgresql/data
+    command: ["postgres", "-c", "port=${DBPORT}"]
     restart: unless-stopped
     networks:
       dbnet:
@@ -33,9 +47,9 @@ services:
     environment:
       - SHELL_FORMAT_EXTRA=$${HS_DIR},$${HS_HOST},$${HS_PORT},$${HS_PORTEXT}
       - HS_DIR=/var/lib/tor/.tor/
-      - HS_PORTEXT=80
+      - HS_PORTEXT=${EXTPORT}
       - HS_HOST=backend
-      - HS_PORT=3000
+      - HS_PORT=${BACKPORT}
     restart: unless-stopped
     volumes:
       - ./tor/torrc.template:/etc/tor/torrc.template
