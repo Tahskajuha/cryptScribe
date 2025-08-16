@@ -16,7 +16,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         app: resolve(__dirname, "frontend/app.html"),
-        gate: resolve(__dirname, "frontend/index.html"),
+        gate: resolve(__dirname, "frontend/auth.html"),
+        forgetpwd: resolve(__dirname, "frontend/forgetpwd.html"),
+        resetkey: resolve(__dirname, "frontend/resetkey.html"),
+        main: resolve(__dirname, "frontend/index.html"),
       },
     },
   },

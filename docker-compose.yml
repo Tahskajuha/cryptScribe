@@ -1,9 +1,9 @@
 services:
   backend:
     environment:
-      PORT: ${BACKPORT}
-      USER: ${DBUSERNAME}
-      PWD: ${DBPWD}
+      APPPORT: ${BACKPORT}
+      DBUSER: ${DBUSERNAME}
+      DBPWD: ${DBPWD}
       NAME: ${DBNAME}
       DBPORT: ${DBPORT}
       RESENDAPI: ${RESENDAPI}

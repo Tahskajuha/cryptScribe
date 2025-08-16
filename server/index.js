@@ -10,9 +10,9 @@ import { writeFile, readFile, unlink } from "fs/promises";
 import { Resend } from "resend";
 
 const db = new pg.Pool({
-  user: process.env.USER,
+  user: process.env.DBUSER,
   host: "db",
-  password: process.env.PWD,
+  password: process.env.DBPWD,
   database: process.env.NAME,
   port: process.env.DBPORT,
   max: 5,
@@ -543,7 +543,7 @@ app.post("/void/ster", async (req, res) => {
 });
 
 //================================================<Server Start and End>==============================================
-app.listen(process.env.PORT, "0.0.0.0", async () => {
+app.listen(process.env.APPPORT, "0.0.0.0", async () => {
   await db.query("SET search_path TO journal");
   let placeholder = [];
   for (let i = 0; i < 30; i++) {
@@ -560,7 +560,7 @@ app.listen(process.env.PORT, "0.0.0.0", async () => {
   process.env.WRITE = (await genRandom())[1];
   process.env.RESETKEY = (await genRandom())[1];
   await nonceCleaner();
-  console.log(`Active on port ${webPort}`);
+  console.log(`Active on port ${process.env.APPPORT}`);
 });
 
 process.on("SIGINT", async () => await shutdown());

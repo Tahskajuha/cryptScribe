@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "cryptScribe frontend and cli dependencies",
   "scripts": {
-    "dev": "concurrently -k -n vite,docker -c magenta,cyan \"docker-compose up --build\" \"node waitOn.js && vite\""
+    "dev": "concurrently -k -n vite,docker -c magenta,cyan \"docker-compose up --build\" \"node waitOn.js && vite\"",
+    "frontest": "vite"
   },
   "keywords": [],
   "author": "Tahskajuha",
