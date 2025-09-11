@@ -1,0 +1,74 @@
+:root {
+  color-scheme: dark;
+}
+body {
+  display: flex;
+  justify-content: center;
+  font-family: "Cantarell", sans-serif;
+  overflow-y: auto;
+  background-color: #262626;
+}
+form {
+  width: 75vw;
+  height: 95vh;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+label {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.5em;
+  margin-left: 0px;
+}
+input {
+  background-color: #333333;
+  color: white;
+  outline: none;
+  font-size: 1em;
+  height: 1.5em;
+  padding: 7px;
+  width: 100%;
+  border: 0px;
+}
+input:focus {
+  border: 2px solid #9c27b0;
+}
+#skinPicker {
+  display: flex;
+  width: 100%;
+}
+#browse {
+  margin: 2px;
+  margin-left: 10px;
+  font-size: 1em;
+}
+span {
+  font-style: italic;
+  font-size: 0.85em;
+}
+#submit {
+  margin-top: 15px;
+  margin-left: 400px;
+  margin-right: 400px;
+  font-size: 1.5em;
+}
+@media (max-width: 1216px) {
+  label {
+    font-size: 2em;
+  }
+  input {
+    height: 3rem;
+    font-size: 2rem;
+  }
+  #browse {
+    font-size: 2rem;
+  }
+  span {
+    font-size: 1.5rem;
+  }
+  #submit {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+}

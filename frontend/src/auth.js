@@ -1,8 +1,8 @@
 import $ from "jquery";
-import utils from "/src/utils.js";
-await Promise.all([utils.domReady(), utils.sodiumReady]);
+import { domReady, animations, wait } from "/src/rendererUtils.js";
+await domReady();
 
-await utils.animations.pageLand();
+await animations.pageLand();
 
 $("#login").on("submit", async (e) => {
   try {
@@ -129,7 +129,7 @@ $("#register").on("submit", async (e) => {
     let salt = utils.fromB64(secretTalks[0].salt);
     let nonce = utils.fromB64(secretTalks[0].nonce);
     await utils.wait(1000);
-    $("#secret").removeClass.hidden;
+    $("#secret").removeClass("hidden");
     const hash = await argon2.hash({
       pass: secretTalks[1].hash,
       salt: salt,

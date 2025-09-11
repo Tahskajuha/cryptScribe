@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="./index.css" />
+    <script src="./welcome.js" type="module"></script>
+    <title>Welcome</title>
+  </head>
+  <body>
+    <form id="config">
+      <label> Backend Link: </label>
+      <input
+        name="Link"
+        required
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
+      <label> Skin: </label>
+      <div id="skinPicker">
+        <input
+          name="Directory Path"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <button id="browse">
+          <span>Browse</span>
+        </button>
+      </div>
+      <span> Keep this field empty for no GUI </span>
+      <button type="submit" id="submit">Connect</button>
+    </form>
+  </body>
+</html>

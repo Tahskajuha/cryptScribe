@@ -1,34 +1,4 @@
-import $ from "jquery";
 import _sodium from "libsodium-wrappers";
-
-const animations = {
-  async pageLand() {
-    $("#whiteScreen").addClass("hidden");
-    await wait(800);
-    $("#content").removeClass("hidden");
-    return 1;
-  },
-  async pageLeave() {
-    $("#background").addClass("hidden");
-    await wait(2500);
-    const video = $("#leave")[0];
-    video.play();
-    await wait(2000);
-    $("#whiteScreen").removeClass("hidden");
-    await wait(2000);
-    return 1;
-  },
-};
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function domReady() {
-  return new Promise((resolve) => {
-    $(resolve);
-  });
-}
 
 async function sodiumReady() {
   await _sodium.ready;
@@ -116,9 +86,6 @@ function b2bMatch(key, hash) {
 }
 
 export default {
-  wait,
-  animations,
-  domReady,
   keygen,
   encrypt,
   decrypt,
