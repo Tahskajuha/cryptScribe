@@ -111,7 +111,7 @@ function Editor({ currentEncrypted }) {
   const { encrypted, setEncrypted } = useContext(EncText);
   const { currentNum } = useContext(CurrentNum);
   const [pending, setPending] = useState(encrypted);
-  currentEncrypted.encrypted = encrypted;
+  currentEncrypted.current = encrypted;
   const suppressUpdate = useRef(false);
   const editor = useEditor({
     content: "",
@@ -202,6 +202,8 @@ function Editor({ currentEncrypted }) {
     },
     ssr: false,
   });
+
+  // Check if there's a change in enckey variable or current entry number and change the editor's content and editable state accordingly
   useEffect(() => {
     if (editor) {
       suppressUpdate.current = true;
@@ -214,6 +216,7 @@ function Editor({ currentEncrypted }) {
       }
     }
   }, [enckey, currentNum]);
+
   useEffect(() => {
     currentEncrypted.current = encrypted;
     setPending(currentEncrypted.current);
