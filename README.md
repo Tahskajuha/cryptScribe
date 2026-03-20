@@ -1,6 +1,28 @@
-# **cryptScribe (WIP)**
+# **cryptScribe (Inactive)**
 
-> **A zero-plaintext, privacy-first journaling platform that keeps full control of your data in your hands using client-side cryptography, a rigorously normalized backend and a flexible local-first deployment while being fully extensible and customizable.**
+> ## Project Status: Experimental Exploration
+> 
+> cryptScribe is not a finished product.
+> 
+> This project was an exploration of pushing multiple systems to their limits simultaneously, including:
+> 
+> - Secure document handling with strong cryptographic guarantees
+> - Rich text editing with deep TipTap customization
+> - Highly normalized database design with constrained query complexity
+> - UX strategies for masking network latency (e.g., Tor)
+> - Multi-interface support (CLI + GUI) and theming systems
+> 
+> As a result, this repository represents a collection of experiments and ideas rather than a polished or production-ready application.
+> 
+> I am no longer actively developing this as a product.
+> 
+> ---
+> 
+> If you're looking for a usable tool, this is probably not it.
+> 
+> If you're interested in systems design tradeoffs and experimentation, you might find it useful.
+
+**A zero-plaintext, privacy-first journaling platform that keeps full control of your data in your hands using client-side cryptography, a rigorously normalized backend and a flexible local-first deployment while being fully extensible and customizable.**
 
 ---
 
